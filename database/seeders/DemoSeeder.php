@@ -34,6 +34,62 @@ class DemoSeeder extends Seeder
         $this->staff();
         $this->inventory();
         $this->clientsAndPatients();
+        $this->calendar();
+    }
+
+    private function calendar(): void
+    {
+        if (\App\Models\Appointment::count() > 0) {
+            return;
+        }
+
+        $providers = User::where('is_provider', true)->pluck('id')->all();
+        $locations = \App\Models\Location::pluck('id')->all();
+        $reasons = \App\Models\AppointmentReason::pluck('id')->all();
+        $statuses = \App\Models\AppointmentStatus::pluck('id', 'name');
+        $labels = \App\Models\AppointmentLabel::pluck('id')->all();
+        $notStarted = \App\Models\TaskStatus::where('name', 'Not Started')->value('id');
+
+        Patient::with('client')->inRandomOrder()->take(45)->get()->each(function (Patient $patient) use ($providers, $locations, $reasons, $statuses, $labels) {
+            $start = fake()->boolean(65)
+                ? fake()->dateTimeBetween('now', '+3 weeks')
+                : fake()->dateTimeBetween('-3 weeks', 'now');
+            $start = \Illuminate\Support\Carbon::instance($start)->setTime(fake()->numberBetween(8, 16), fake()->randomElement([0, 15, 30, 45]));
+            $duration = fake()->randomElement([15, 15, 30, 30, 45]);
+
+            $status = $start->isPast()
+                ? $statuses->only(['Completed', 'No Show', 'Cancelled'])->random()
+                : $statuses->only(['Tentative', 'Confirmed', 'Confirmed'])->random();
+
+            \App\Models\Appointment::create([
+                'client_id' => $patient->client_id,
+                'patient_id' => $patient->id,
+                'provider_id' => fake()->randomElement($providers),
+                'location_id' => fake()->randomElement($locations),
+                'starts_at' => $start,
+                'ends_at' => (clone $start)->addMinutes($duration),
+                'duration_minutes' => $duration,
+                'appointment_reason_id' => fake()->randomElement($reasons),
+                'appointment_status_id' => $status,
+                'appointment_label_id' => fake()->boolean(30) ? fake()->randomElement($labels) : null,
+            ]);
+        });
+
+        foreach ([
+            ['Call Mrs Santos re: lab results', 'Lab follow-up'],
+            ['Order more 5-in-1 vaccine — running low', 'Order supplies'],
+            ['Autoclave annual service due', 'Equipment service'],
+            ['Recall overdue vaccination patients', 'Recall patient'],
+            ['Restock consult room 2', 'Admin'],
+        ] as [$title, $type]) {
+            \App\Models\Task::create([
+                'title' => $title,
+                'task_type' => $type,
+                'provider_id' => fake()->randomElement($providers),
+                'task_status_id' => $notStarted,
+                'due_on' => fake()->dateTimeBetween('now', '+2 weeks'),
+            ]);
+        }
     }
 
     private function inventory(): void

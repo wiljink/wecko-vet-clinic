@@ -36,6 +36,58 @@ class DemoSeeder extends Seeder
         $this->clientsAndPatients();
         $this->calendar();
         $this->consultations();
+        $this->counterSales();
+    }
+
+    private function counterSales(): void
+    {
+        if (\App\Models\CounterSale::count() > 0) {
+            return;
+        }
+
+        $otc = Product::sellable('otc')->get();
+        if ($otc->isEmpty()) {
+            return;
+        }
+
+        $clients = Client::where('is_active', true)->pluck('id')->all();
+        $providers = User::where('is_provider', true)->pluck('id')->all();
+
+        foreach (range(1, 18) as $n) {
+            $walkIn = fake()->boolean(55);
+            $sale = \App\Models\CounterSale::create([
+                'walk_in' => $walkIn,
+                'walk_in_name' => $walkIn ? fake()->name() : null,
+                'client_id' => $walkIn ? null : fake()->randomElement($clients),
+                'provider_id' => fake()->randomElement($providers),
+                'sale_date' => fake()->dateTimeBetween('-2 months', 'now'),
+            ]);
+
+            foreach (range(1, random_int(1, 3)) as $l) {
+                $p = $otc->random();
+                $sale->items()->create([
+                    'kind' => 'product',
+                    'product_id' => $p->id,
+                    'description' => $p->name,
+                    'qty' => random_int(1, 3),
+                    'unit_price_ex_tax' => $p->sell_price_ex_tax,
+                    'tax_rate' => $p->tax_rate,
+                    'dispensing_fee' => $p->dispense_fee_always ? $p->dispense_fee : 0,
+                ]);
+            }
+
+            $sale->refresh();
+
+            if (! $walkIn && fake()->boolean(30)) {
+                $sale->complete(null); // on account
+            } else {
+                $pay = ['payment_type' => fake()->randomElement(['cash', 'cash', 'credit_card', 'eftpos'])];
+                if ($pay['payment_type'] === 'cash') {
+                    $pay['cash_received'] = ceil((float) $sale->total_inc_tax / 100) * 100;
+                }
+                $sale->complete($pay);
+            }
+        }
     }
 
     private function consultations(): void

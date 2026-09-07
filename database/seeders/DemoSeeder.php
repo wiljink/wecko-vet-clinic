@@ -35,6 +35,76 @@ class DemoSeeder extends Seeder
         $this->inventory();
         $this->clientsAndPatients();
         $this->calendar();
+        $this->consultations();
+    }
+
+    private function consultations(): void
+    {
+        if (\App\Models\Consultation::count() > 0) {
+            return;
+        }
+
+        // Standard consult templates
+        $consultService = Product::where('name', 'General Consultation')->first();
+        $c5 = Product::where('name', 'like', '5-in-1%')->first();
+        $rabies = Product::where('name', 'like', 'Anti-Rabies%')->first();
+
+        if ($consultService && $c5 && $rabies) {
+            $std = \App\Models\StandardConsult::create([
+                'name' => 'Annual Vaccination — Canine',
+                'appointment_reason_id' => \App\Models\AppointmentReason::where('reason', 'like', '%Booster%')->value('id'),
+            ]);
+            $std->items()->createMany([
+                ['product_id' => $consultService->id, 'kind' => 'service', 'qty' => 1],
+                ['product_id' => $c5->id, 'kind' => 'vaccination', 'qty' => 1],
+                ['product_id' => $rabies->id, 'kind' => 'vaccination', 'qty' => 1],
+            ]);
+        }
+
+        $providers = User::where('is_provider', true)->pluck('id')->all();
+        $services = Product::kind('service')->get();
+        $drugs = Product::kind('product')->where('group_id', \App\Models\Group::where('name', 'Drugs')->value('id'))->get();
+        $vaccines = Product::kind('vaccine')->get();
+        $reasons = \App\Models\AppointmentReason::pluck('id')->all();
+
+        Patient::with('client')->inRandomOrder()->take(35)->get()->each(function (Patient $patient) use ($providers, $services, $drugs, $vaccines, $reasons) {
+            $date = \Illuminate\Support\Carbon::instance(fake()->dateTimeBetween('-4 months', '-2 days'))
+                ->setTime(fake()->numberBetween(9, 16), fake()->randomElement([0, 30]));
+
+            $consult = \App\Models\Consultation::create([
+                'client_id' => $patient->client_id,
+                'patient_id' => $patient->id,
+                'provider_id' => fake()->randomElement($providers),
+                'consult_date' => $date,
+                'appointment_reason_id' => fake()->randomElement($reasons),
+                'weight' => $patient->weight,
+                'temperature' => fake()->randomFloat(1, 37.5, 39.5),
+                'consult_diagnosis' => fake()->randomElement([
+                    'Healthy — routine visit', 'Otitis externa', 'Gastroenteritis', 'Skin allergy / atopy',
+                    'Dental disease grade 2', 'Wound — left hind limb', 'Upper respiratory infection',
+                ]),
+            ]);
+
+            $consult->items()->create(\App\Filament\Resources\ConsultationResource::lineFromProduct(
+                $services->firstWhere('name', 'General Consultation') ?? $services->random(), 'service', 1
+            ));
+
+            if (fake()->boolean(55) && $drugs->isNotEmpty()) {
+                $drug = $drugs->random();
+                $consult->items()->create(\App\Filament\Resources\ConsultationResource::lineFromProduct($drug, 'drug', fake()->numberBetween(7, 21)));
+            }
+
+            if (fake()->boolean(35) && $vaccines->isNotEmpty()) {
+                $consult->items()->create(\App\Filament\Resources\ConsultationResource::lineFromProduct($vaccines->random(), 'vaccination', 1));
+            }
+
+            // Finalize most of them.
+            if (fake()->boolean(80)) {
+                $consult->finalize();
+            } else {
+                $consult->update(['status' => fake()->randomElement(['open', 'closed'])]);
+            }
+        });
     }
 
     private function calendar(): void

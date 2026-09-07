@@ -141,6 +141,24 @@ class DemoSeeder extends Seeder
                 'moved_at' => now()->subMonths(2),
             ]);
         }
+
+        // A posted stock receipt brings the vaccines onto the shelf.
+        $receipt = \App\Models\StockReceipt::create([
+            'supplier_id' => $suppliers->firstWhere('name', 'Zoetis Philippines')->id,
+            'received_date' => now()->subWeeks(3)->toDateString(),
+            'supplier_doc_no' => 'ZP-'.fake()->numerify('#####'),
+        ]);
+        foreach (Product::kind('vaccine')->get() as $vaccine) {
+            $receipt->items()->create([
+                'product_id' => $vaccine->id,
+                'qty' => 40,
+                'unit_cost_ex_tax' => $vaccine->unit_cost_ex_tax,
+                'sell_price_ex_tax' => $vaccine->sell_price_ex_tax,
+                'batch_no' => strtoupper(fake()->bothify('??##??')),
+                'expiry_on' => now()->addYear()->toDateString(),
+            ]);
+        }
+        $receipt->post();
     }
 
     private function staff(): void

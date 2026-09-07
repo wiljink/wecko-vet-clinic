@@ -170,6 +170,29 @@ class Consultation extends Model
                         'start_on' => $this->consult_date->toDateString(),
                     ]);
                 }
+
+                // Products / services carrying a reminder type (worming, heartworm,
+                // dental...) raise a follow-up reminder at their interval.
+                if ($item->kind !== 'vaccination' && $product->patient_reminder_type_id && $product->reminderType) {
+                    $due = $product->reminderType->nextDueFrom($this->consult_date->copy());
+                    $open = Reminder::where('patient_id', $this->patient_id)
+                        ->where('patient_reminder_type_id', $product->patient_reminder_type_id)
+                        ->whereIn('status', ['pending', 'sent'])->exists();
+
+                    if (! $open) {
+                        Reminder::create([
+                            'remindable_type' => $this->patient->getMorphClass(),
+                            'remindable_id' => $this->patient_id,
+                            'client_id' => $this->client_id,
+                            'patient_id' => $this->patient_id,
+                            'patient_reminder_type_id' => $product->patient_reminder_type_id,
+                            'category' => $product->reminderType->category,
+                            'species_id' => $this->patient?->species_id,
+                            'due_on' => $due->toDateString(),
+                            'notes' => "{$product->reminderType->name} follow-up ({$product->name})",
+                        ]);
+                    }
+                }
             }
 
             $invoice = Invoice::fromSource($this, $invoiceLines);

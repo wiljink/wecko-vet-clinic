@@ -22,6 +22,7 @@ use App\Models\State;
 use App\Models\SuburbPostcode;
 use App\Models\TaskStatus;
 use App\Models\Title;
+use App\Models\DocumentTemplate;
 use Illuminate\Database\Seeder;
 
 /**
@@ -250,6 +251,32 @@ class ReferentialDataSeeder extends Seeder
 
         foreach (['Not Started', 'In Progress', 'Completed', 'Deferred'] as $n) {
             TaskStatus::firstOrCreate(['name' => $n]);
+        }
+
+        $vacc = PatientReminderType::firstWhere('name', 'Vaccination');
+        foreach ([
+            ['name' => 'Vaccination reminder — 1st (Email)', 'type' => 'reminder_email', 'channel' => 'email', 'sequence' => 1,
+                'subject' => '{{ patient.name }} is due for vaccination',
+                'body' => "Dear {{ client.name }},\n\nOur records show that {{ patient.name }} is due for {{ reminder.type }} on {{ reminder.due_on }}.\nPlease call {{ clinic.name }} on {{ clinic.phone }} to book an appointment.\n\nKind regards,\n{{ clinic.name }}",
+                'patient_reminder_type_id' => $vacc?->id],
+            ['name' => 'Vaccination reminder — 2nd chaser (Email)', 'type' => 'reminder_email', 'channel' => 'email', 'sequence' => 2,
+                'subject' => 'Second reminder: {{ patient.name }} vaccination overdue',
+                'body' => "Dear {{ client.name }},\n\nWe wrote to you recently about {{ patient.name }}'s {{ reminder.type }}, which is now overdue (was due {{ reminder.due_on }}).\nKeeping vaccinations up to date protects {{ patient.name }} and other pets. Please contact us on {{ clinic.phone }}.\n\n{{ clinic.name }}",
+                'patient_reminder_type_id' => $vacc?->id],
+            ['name' => 'Vaccination reminder (SMS)', 'type' => 'reminder_sms', 'channel' => 'sms', 'sequence' => 1,
+                'subject' => null,
+                'body' => '{{ clinic.name }}: {{ patient.name }} is due for {{ reminder.type }} on {{ reminder.due_on }}. Call {{ clinic.phone }} to book.',
+                'patient_reminder_type_id' => $vacc?->id],
+            ['name' => 'Generic reminder (Letter)', 'type' => 'reminder_letter', 'channel' => 'letter', 'sequence' => 1,
+                'subject' => 'Health reminder for {{ patient.name }}',
+                'body' => "Dear {{ client.name }},\n\nThis is a reminder that {{ patient.name }} is due for {{ reminder.type }} on {{ reminder.due_on }}.\n\n{{ clinic.name }}",
+                'patient_reminder_type_id' => null],
+            ['name' => 'Wet-season parasite campaign (Email)', 'type' => 'marketing', 'channel' => 'email', 'sequence' => 1,
+                'subject' => 'Protect {{ client.surname }} pets this rainy season',
+                'body' => "Dear {{ client.name }},\n\nThe rainy season brings more fleas, ticks and heartworm. Book a parasite check at {{ clinic.name }} and get 10% off preventatives this month.\nCall {{ clinic.phone }}.\n\n{{ clinic.name }}",
+                'patient_reminder_type_id' => null],
+        ] as $tpl) {
+            DocumentTemplate::firstOrCreate(['name' => $tpl['name']], $tpl);
         }
 
         CompanySetting::current()->update([

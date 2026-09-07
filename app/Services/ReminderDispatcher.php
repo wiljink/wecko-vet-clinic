@@ -125,6 +125,61 @@ class ReminderDispatcher
         return [$issued, $sent];
     }
 
+    /**
+     * Run a marketing campaign against clients matching its filter.
+     * Filter keys: species_id, has_email, inactive_days, min_balance.
+     */
+    public function runCampaign(\App\Models\MarketingCampaign $campaign): int
+    {
+        $clinic = CompanySetting::current();
+        $filter = $campaign->filter ?? [];
+        $channels = $campaign->channels ?: ['email'];
+        $template = $campaign->template;
+
+        $query = \App\Models\Client::query()->where('is_active', true);
+
+        if ($filter['has_email'] ?? false) {
+            $query->whereNotNull('email');
+        }
+        if ($filter['species_id'] ?? null) {
+            $query->whereHas('patients', fn ($q) => $q->where('species_id', $filter['species_id']));
+        }
+
+        $count = 0;
+
+        $query->with('patients')->chunk(200, function ($clients) use ($channels, $template, $clinic, &$count) {
+            foreach ($clients as $client) {
+                foreach ($channels as $channel) {
+                    $prefKey = "marketing_by_{$channel}";
+                    if (! $client->{$prefKey}) {
+                        continue;
+                    }
+                    if ($channel === 'email' && ! $client->email) {
+                        continue;
+                    }
+                    if ($channel === 'sms' && ! $client->mobile_phone) {
+                        continue;
+                    }
+
+                    $data = [
+                        'client' => ['name' => $client->full_name, 'surname' => $client->surname],
+                        'clinic' => ['name' => $clinic->company_name, 'phone' => $clinic->phone],
+                    ];
+                    [$subject, $body] = $template
+                        ? array_values($template->render($data))
+                        : ['News from '.$clinic->company_name, 'Hello '.$client->full_name.', we have news from '.$clinic->company_name.'.'];
+
+                    $this->deliver($channel, $client, $subject, $body);
+                    $count++;
+                }
+            }
+        });
+
+        $campaign->update(['ran_at' => now(), 'recipients' => $count]);
+
+        return $count;
+    }
+
     private function templateFor(Reminder $reminder, string $channel): ?DocumentTemplate
     {
         $type = "reminder_{$channel}";

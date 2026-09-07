@@ -38,6 +38,33 @@ class DemoSeeder extends Seeder
         $this->consultations();
         $this->counterSales();
         $this->financials();
+        $this->reminders();
+    }
+
+    private function reminders(): void
+    {
+        // Pull a handful of vaccination boosters back so some reminders are due now.
+        \App\Models\Vaccination::inRandomOrder()->take(4)->get()->each(function (\App\Models\Vaccination $v) {
+            $v->update(['booster_due_on' => now()->subDays(random_int(3, 40))]);
+            \App\Models\Reminder::where('vaccination_id', $v->id)->update(['due_on' => $v->booster_due_on]);
+        });
+
+        \Illuminate\Support\Facades\Artisan::call('reminders:generate');
+
+        // A few phone reminders.
+        \App\Models\Patient::has('consultations')->inRandomOrder()->take(3)->get()->each(fn (Patient $p) => \App\Models\Reminder::create([
+            'remindable_type' => $p->getMorphClass(), 'remindable_id' => $p->id,
+            'client_id' => $p->client_id, 'patient_id' => $p->id,
+            'category' => 'phone', 'due_on' => now()->addDays(random_int(1, 5)),
+            'notes' => "Follow up on {$p->name}'s recovery",
+        ]));
+
+        \App\Models\MarketingCampaign::create([
+            'name' => 'Rainy-season parasite check 2026',
+            'channels' => ['email'],
+            'document_template_id' => \App\Models\DocumentTemplate::where('type', 'marketing')->value('id'),
+            'filter' => ['has_email' => true],
+        ]);
     }
 
     private function financials(): void

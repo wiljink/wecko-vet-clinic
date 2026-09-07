@@ -3,15 +3,20 @@
 namespace Database\Seeders;
 
 use App\Models\AppointmentStatus;
-use App\Models\Breed;
 use App\Models\Client;
 use App\Models\ClientAddress;
 use App\Models\Colour;
+use App\Models\Group;
 use App\Models\JobPosition;
 use App\Models\Patient;
+use App\Models\PatientReminderType;
+use App\Models\Product;
+use App\Models\RegimeType;
 use App\Models\Referral;
 use App\Models\Species;
 use App\Models\State;
+use App\Models\StockMovement;
+use App\Models\Supplier;
 use App\Models\SuburbPostcode;
 use App\Models\Title;
 use App\Models\User;
@@ -27,7 +32,115 @@ class DemoSeeder extends Seeder
     public function run(): void
     {
         $this->staff();
+        $this->inventory();
         $this->clientsAndPatients();
+    }
+
+    private function inventory(): void
+    {
+        if (Product::count() > 0) {
+            return;
+        }
+
+        $suppliers = collect([
+            'Zoetis Philippines', 'MSD Animal Health', 'Boehringer Ingelheim',
+            'Virbac Philippines', 'CENVET Distribution', 'Royal Canin PH',
+        ])->map(fn ($n) => Supplier::create([
+            'name' => $n,
+            'contact_name' => fake()->name(),
+            'email' => fake()->companyEmail(),
+            'phone' => fake()->numerify('(02) 8### ####'),
+        ]));
+
+        $g = fn (string $name) => Group::firstWhere('name', $name)?->id;
+        $regimes = RegimeType::pluck('id', 'name');
+        $vaccReminder = PatientReminderType::firstWhere('name', 'Vaccination')?->id;
+
+        $services = [
+            ['General Consultation', 'Consultation', 650],
+            ['Follow-up Consultation', 'Consultation', 400],
+            ['Emergency Consultation', 'Consultation', 1200],
+            ['Spay — Canine (small)', 'Desexing', 4500],
+            ['Castration — Canine', 'Desexing', 3200],
+            ['Spay — Feline', 'Desexing', 2800],
+            ['Dental Scale & Polish', 'Dental', 3500],
+            ['Microchip Implant', 'Microchipping', 950],
+            ['Complete Blood Count', 'Laboratory', 850],
+            ['Blood Chemistry Panel', 'Laboratory', 1800],
+            ['Digital X-Ray (1 view)', 'Imaging', 1500],
+            ['Ultrasound — Abdomen', 'Imaging', 2200],
+            ['Hospitalisation — per day', 'Hospitalisation', 900],
+            ['Euthanasia', 'Euthanasia', 1500],
+            ['Full Groom — Dog (medium)', 'Grooming', 800],
+            ['Nail Trim', 'Grooming', 150],
+        ];
+        foreach ($services as [$name, $group, $price]) {
+            Product::create([
+                'kind' => 'service', 'name' => $name, 'group_id' => $g($group),
+                'sell_price_ex_tax' => $price, 'tax_rate' => 12, 'list_this_product' => 'both',
+            ]);
+        }
+
+        $vaccines = [
+            ['5-in-1 (DHPPi+L) — Canine', 12, 'Canine Distemper, Hepatitis, Parvovirus, Parainfluenza & Leptospirosis', 'Zoetis Philippines'],
+            ['Anti-Rabies — Canine/Feline', 12, 'Rabies', 'MSD Animal Health'],
+            ['4-in-1 (FVRCP+FeLV) — Feline', 12, 'Feline Rhinotracheitis, Calicivirus, Panleucopenia & Leukemia', 'Boehringer Ingelheim'],
+            ['Kennel Cough (Bronchi-Shield)', 12, 'Bordetella bronchiseptica', 'Zoetis Philippines'],
+        ];
+        foreach ($vaccines as [$name, $months, $protection, $sup]) {
+            Product::create([
+                'kind' => 'vaccine', 'name' => $name, 'group_id' => $g('Vaccinations'),
+                'supplier_id' => $suppliers->firstWhere('name', $sup)?->id,
+                'unit_cost_ex_tax' => fake()->randomFloat(2, 120, 380),
+                'sell_price_ex_tax' => fake()->randomFloat(0, 550, 1100),
+                'tax_rate' => 12, 'pack_qty' => 10, 'reorder_level' => 15, 'max_holding' => 60,
+                'has_expiry' => true, 'protection' => $protection,
+                'booster_months' => $months, 'prints_certificate' => true,
+                'patient_reminder_type_id' => $vaccReminder,
+                'dispense_fee' => 0, 'list_this_product' => 'consult',
+            ]);
+        }
+
+        $products = [
+            ['Amoxicillin 250mg Tablet', 'Drugs', 8, 25, '1 Tablet Twice Daily With Food'],
+            ['Metronidazole 250mg Tablet', 'Drugs', 6, 20, '1 Tablet Twice Daily'],
+            ['Carprofen 50mg Tablet', 'Drugs', 15, 42, '1 Tablet Daily With Food'],
+            ['Meloxicam Oral Suspension 15ml', 'Drugs', 180, 520, '½ Tablet Once Daily'],
+            ['Apoquel 5.4mg Tablet', 'Drugs', 45, 120, '1 Tablet Twice Daily'],
+            ['Ivermectin Injection 50ml', 'Drugs', 220, 620, null],
+            ['NexGard Chewable (M)', 'Drugs', 320, 780, '1 Tablet Daily'],
+            ['Drontal Plus Tablet', 'Drugs', 60, 165, null],
+            ['Advocate Spot-On Dog (M)', 'Drugs', 280, 690, null],
+            ['Disposable Syringe 3ml', 'Consumables', 4, 12, null],
+            ['Hypodermic Needle 23G', 'Consumables', 2, 6, null],
+            ['Surgical Gloves (pair)', 'Consumables', 12, 30, null],
+            ['Elizabethan Collar (M)', 'Consumables', 90, 240, null],
+            ['Hills Science Diet Adult 3kg', 'Food', 780, 1450, null],
+            ['Royal Canin Kitten 2kg', 'Food', 690, 1290, null],
+        ];
+        foreach ($products as [$name, $group, $cost, $price, $regime]) {
+            $p = Product::create([
+                'kind' => 'product', 'name' => $name, 'group_id' => $g($group),
+                'supplier_id' => $suppliers->random()->id,
+                'unit_cost_ex_tax' => $cost, 'sell_price_ex_tax' => $price, 'tax_rate' => 12,
+                'pack_qty' => in_array($group, ['Drugs', 'Consumables']) ? 100 : 1,
+                'reorder_level' => fake()->randomElement([10, 20, 30]),
+                'max_holding' => fake()->randomElement([80, 120, 200]),
+                'has_expiry' => $group === 'Drugs',
+                'dispense_fee' => $group === 'Drugs' ? 50 : 0,
+                'dispense_fee_always' => $group === 'Drugs',
+                'regime_id' => $regime ? $regimes[$regime] ?? null : null,
+                'list_this_product' => 'both',
+                'print_label' => $group === 'Drugs',
+            ]);
+
+            // Opening stock.
+            StockMovement::record($p, 'opening', fake()->numberBetween(20, 150), [
+                'reason' => 'Opening balance',
+                'unit_cost_ex_tax' => $cost,
+                'moved_at' => now()->subMonths(2),
+            ]);
+        }
     }
 
     private function staff(): void

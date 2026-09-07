@@ -46,7 +46,7 @@ class PatientTransferResource extends Resource
                         \Filament\Forms\Components\DatePicker::make('from'),
                         \Filament\Forms\Components\DatePicker::make('until'),
                     ])
-                    ->query(fn ($query, array $data) => $query
+                    ->query(fn (\Illuminate\Database\Eloquent\Builder $query, array $data) => $query
                         ->when($data['from'] ?? null, fn ($q, $d) => $q->whereDate('transferred_at', '>=', $d))
                         ->when($data['until'] ?? null, fn ($q, $d) => $q->whereDate('transferred_at', '<=', $d))),
             ])

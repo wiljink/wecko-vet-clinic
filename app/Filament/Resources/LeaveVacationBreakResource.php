@@ -27,7 +27,7 @@ class LeaveVacationBreakResource extends Resource
     {
         return [
             Forms\Components\Select::make('user_id')->label('Provider')->required()
-                ->relationship('user', 'name', fn ($q) => $q->where('is_provider', true))->searchable()->preload(),
+                ->relationship('user', 'name', fn (\Illuminate\Database\Eloquent\Builder $query) => $query->where('is_provider', true))->searchable()->preload(),
             Forms\Components\Select::make('type')->required()->default('leave')
                 ->options(['leave' => 'Leave', 'vacation' => 'Vacation', 'break' => 'Break']),
             Forms\Components\DateTimePicker::make('starts_at')->required()->seconds(false),

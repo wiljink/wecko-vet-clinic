@@ -37,6 +37,50 @@ class DemoSeeder extends Seeder
         $this->calendar();
         $this->consultations();
         $this->counterSales();
+        $this->financials();
+    }
+
+    private function financials(): void
+    {
+        if (\App\Models\Payment::where('reference', 'like', 'Account payment%')->exists()) {
+            return;
+        }
+
+        // Pay off roughly two-thirds of outstanding consult invoices.
+        \App\Models\Invoice::outstanding()->inRandomOrder()->take(24)->get()->each(function (\App\Models\Invoice $invoice) {
+            $full = fake()->boolean(70);
+            $amount = $full ? (float) $invoice->balance : round((float) $invoice->balance * fake()->randomFloat(2, 0.3, 0.8), 2);
+
+            $payment = \App\Models\Payment::create([
+                'client_id' => $invoice->client_id,
+                'payment_type' => fake()->randomElement(['cash', 'cash', 'eftpos', 'credit_card', 'cheque']),
+                'amount' => $amount,
+                'reference' => 'Account payment',
+                'received_at' => fake()->dateTimeBetween($invoice->invoice_date, 'now'),
+            ]);
+            $payment->allocateTo([$invoice]);
+        });
+
+        // A couple of goodwill / write-off adjustments.
+        \App\Models\Client::has('invoices')->inRandomOrder()->take(4)->get()->each(function (\App\Models\Client $client) {
+            $client->accountAdjustments()->create([
+                'direction' => fake()->randomElement(['credit', 'credit', 'debit']),
+                'reason' => fake()->randomElement(['Goodwill discount', 'Loyalty credit', 'Clinic-Ware conversion balance', 'Interest on overdue account']),
+                'amount' => fake()->randomFloat(2, 50, 400),
+                'adjusted_on' => fake()->dateTimeBetween('-2 months', 'now'),
+            ]);
+        });
+
+        // Bank the older payments.
+        \App\Models\BankingBatch::bankUpTo(\Illuminate\Support\Carbon::now()->subWeeks(2));
+
+        // One closed till session for yesterday.
+        $till = \App\Models\TillSession::create([
+            'session_date' => now()->subDay()->toDateString(),
+            'opening_float' => 2000,
+            'denominations' => ['1000' => 2, '500' => 3, '100' => 8, '50' => 4, '20' => 5, '10' => 3],
+        ]);
+        $till->close();
     }
 
     private function counterSales(): void

@@ -62,6 +62,13 @@ return [
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
+
+            // spatie/laravel-backup — Laragon's bundled mysqldump.
+            'dump' => [
+                'dump_binary_path' => env('DB_DUMP_BINARY_PATH', 'C:\\laragon\\bin\\mysql\\mysql-8.4.3-winx64\\bin'),
+                'use_single_transaction' => true,
+                'timeout' => 60 * 5,
+            ],
         ],
 
         'mariadb' => [

@@ -1,47 +1,37 @@
-<laravel-boost-guidelines>
-# Laravel Application
+# Wecko Vet Clinic — working notes
 
-This repository contains a Laravel application. Complete the following setup before working on the user's request.
+Laravel 13 + Filament 3 veterinary practice-management system, PH-localised (₱ / 12% VAT).
+Built from the *Clinic-Ware User Manual v2.0*. Single Filament panel at `/admin`, MySQL
+`wecko_vet_clinic`. See `README.md` for the feature map and seeded logins.
 
-## Prerequisites
+## Conventions
 
-Verify that PHP and Composer are available:
+- **Permissions**: every Filament resource uses `App\Filament\Concerns\HasResourcePermissions`
+  (or `IsReferenceResource` for the 20 Setup lists). Set the key with
+  `protected static string $permissionKey = '…'` OR override
+  `protected static function permissionKey(): string`. Abilities are `<ability>_<key>`
+  (view_any/view/create/update/delete) plus fine-grained ones
+  (`finalize_consultation`, `post_stock_take`, `process_payment`, `run_statements`…),
+  all generated in `Database\Seeders\RolesAndPermissionsSeeder::RESOURCE_KEYS`.
+  Role `principal` bypasses every check via `Gate::before` in `AppServiceProvider`.
+- **Filament closures** must have injectable param names: `fn ($state)`, `fn (Model $record)`,
+  `fn (Builder $query)` — never `$q` / `$s`.
+- **Money**: line items store ex-tax and inc-tax; `App\Support\LineTotals::forLine()` is the
+  one place the discount → fee → tax order is defined. Totals recompute via model `saved`/`deleted`
+  hooks calling the parent's `recalculateTotals()`.
+- **Stock**: `StockMovement::record($product, $type, $qtyChange, [...])` is the only way to
+  move stock; a `created` observer updates `products.qty_on_hand`. Never write qty_on_hand directly.
+- **Doc numbers**: `App\Models\Concerns\GeneratesReference` (`$referencePrefix`, `$referenceColumn`).
+- **Reports**: add a method to `App\Support\Reports\ReportBuilder` returning the standard
+  `key/title/subtitle/period/tiles/sections/notes` shape, then a one-line subclass of
+  `App\Filament\Pages\Reports\BaseReport` setting `$builderMethod`.
+- **Reminders / marketing**: `App\Services\ReminderDispatcher` — `deliver()` is the channel
+  swap-in point (email real, sms/letter logged).
 
-```sh
-php -v
-composer -V
-```
+## Gotchas
 
-If either command is unavailable, detect the user's operating system and install the prerequisites with the appropriate command:
-
-macOS:
-
-```sh
-/bin/bash -c "$(curl -fsSL https://php.new/install/mac/8.5)"
-```
-
-Windows PowerShell:
-
-```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://php.new/install/windows/8.5'))
-```
-
-Linux:
-
-```sh
-/bin/bash -c "$(curl -fsSL https://php.new/install/linux/8.5)"
-```
-
-After installation, ask the user to restart their terminal. If the agent needs the restarted shell to continue, ask the user to reopen their terminal and rerun their original prompt.
-
-## Agent Setup
-
-Install Laravel Boost from the application root before making application changes:
-
-```sh
-composer require laravel/boost --dev
-php artisan boost:install
-```
-
-Boost replaces these bootstrap instructions with guidelines tailored to the application. After installation, read `AGENTS.md` again and continue with the user's original request using the generated guidelines.
-</laravel-boost-guidelines>
+- Composer: `C:\laragon\bin\composer\composer.phar`; use `--no-scripts` then
+  `php artisan package:discover` (post-autoload-dump hangs under Laragon).
+- `saade/filament-fullcalendar` unavailable for FL3+L13 → calendar loads FullCalendar 6 from CDN.
+- `spatie/laravel-backup` needs `^10`; dump binary path is set in `config/database.php`.
+- Tests run on sqlite `:memory:` (`php artisan test`).

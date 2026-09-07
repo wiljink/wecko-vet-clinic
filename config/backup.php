@@ -221,12 +221,14 @@ return [
      */
     'notifications' => [
         'notifications' => [
-            BackupHasFailedNotification::class => ['mail'],
-            UnhealthyBackupWasFoundNotification::class => ['mail'],
-            CleanupHasFailedNotification::class => ['mail'],
-            BackupWasSuccessfulNotification::class => ['mail'],
-            HealthyBackupWasFoundNotification::class => ['mail'],
-            CleanupWasSuccessfulNotification::class => ['mail'],
+            // Failures still notify by mail; successes stay quiet. Configure SMTP
+            // in Setup and add a real address below to enable.
+            BackupHasFailedNotification::class => env('BACKUP_NOTIFY', false) ? ['mail'] : [],
+            UnhealthyBackupWasFoundNotification::class => env('BACKUP_NOTIFY', false) ? ['mail'] : [],
+            CleanupHasFailedNotification::class => env('BACKUP_NOTIFY', false) ? ['mail'] : [],
+            BackupWasSuccessfulNotification::class => [],
+            HealthyBackupWasFoundNotification::class => [],
+            CleanupWasSuccessfulNotification::class => [],
         ],
 
         /*

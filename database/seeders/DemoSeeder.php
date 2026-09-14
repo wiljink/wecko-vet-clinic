@@ -50,7 +50,7 @@ class DemoSeeder extends Seeder
     private function branches(): void
     {
         $main = Location::firstOrCreate(
-            ['name' => 'Wecko Pet Clinic — Ozamis'],
+            ['name' => 'Wicko Vet Clinic Main'],
             [
                 'type' => Location::TYPE_BRANCH,
                 'code' => 'OZC', 'address' => 'Don Anceto Peña St, Ozamis City, Misamis Occidental',
@@ -58,7 +58,7 @@ class DemoSeeder extends Seeder
             ],
         );
         $pagadian = Location::firstOrCreate(
-            ['name' => 'Wecko Pet Clinic — Pagadian'],
+            ['name' => 'Wicko Vet Clinic — Pagadian'],
             [
                 'type' => Location::TYPE_BRANCH,
                 'code' => 'PGD', 'address' => 'Rizal Ave, Pagadian City, Zamboanga del Sur',
@@ -66,7 +66,7 @@ class DemoSeeder extends Seeder
             ],
         );
         $iligan = Location::firstOrCreate(
-            ['name' => 'Wecko Pet Clinic — Iligan'],
+            ['name' => 'Wicko Vet Clinic — Iligan'],
             [
                 'type' => Location::TYPE_BRANCH,
                 'code' => 'ILG', 'address' => 'Quezon Ave, Iligan City, Lanao del Norte',

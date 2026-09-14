@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * Setup > Referential Data — the "engine room" lists that populate drop-downs
- * throughout Wecko. Every table carries `is_active` so a value can be retired
+ * throughout Wicko. Every table carries `is_active` so a value can be retired
  * without breaking historical records that still reference it.
  */
 return new class extends Migration

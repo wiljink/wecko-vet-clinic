@@ -33,7 +33,11 @@ class AdminPanelProvider extends PanelProvider
                 fn () => view('filament.partials.login-pets-background'),
                 scopes: Login::class,
             )
-            ->brandName('Wecko Vet Clinic')
+            ->renderHook(
+                PanelsRenderHook::SIDEBAR_FOOTER,
+                fn () => view('filament.partials.branch-badge'),
+            )
+            ->brandName('Wicko Vet Clinic')
             ->colors([
                 'primary' => Color::Teal,
             ])

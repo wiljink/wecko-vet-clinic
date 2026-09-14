@@ -280,7 +280,7 @@ class ReferentialDataSeeder extends Seeder
         }
 
         CompanySetting::current()->update([
-            'company_name' => 'Wecko Vet Clinic',
+            'company_name' => 'Wicko Vet Clinic',
             'address' => "123 Katipunan Avenue\nQuezon City, Metro Manila 1108",
             'email' => 'reception@weckovet.ph',
             'phone' => '(02) 8123 4567',

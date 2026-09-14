@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
         $principal = User::updateOrCreate(
             ['email' => 'admin@wecko.test'],
             [
-                'name' => 'Dr. Wecko Principal',
+                'name' => 'Dr. Wicko Principal',
                 'password' => bcrypt('password'),
                 'is_provider' => true,
                 'is_principal' => true,

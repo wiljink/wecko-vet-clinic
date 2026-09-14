@@ -13,7 +13,7 @@ return new class extends Migration
             $table->id();
 
             // Company information
-            $table->string('company_name')->default('Wecko Vet Clinic');
+            $table->string('company_name')->default('Wicko Vet Clinic');
             $table->text('address')->nullable();
             $table->string('email')->nullable();
             $table->string('phone')->nullable();

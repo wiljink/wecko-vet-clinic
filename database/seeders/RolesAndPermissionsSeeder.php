@@ -9,7 +9,7 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
 /**
- * Wecko security model (System Maintenance > Security).
+ * Wicko security model (System Maintenance > Security).
  *
  * Every Filament resource authorises against spatie permissions named
  * "<ability>_<key>" where ability is one of view_any/view/create/update/delete

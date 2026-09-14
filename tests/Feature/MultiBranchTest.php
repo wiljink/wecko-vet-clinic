@@ -136,4 +136,55 @@ class MultiBranchTest extends TestCase
 
         $this->assertSame($branch->id, $invoice->location_id);
     }
+
+    public function test_the_system_always_keeps_exactly_one_main_branch(): void
+    {
+        $branchA = Location::create(['name' => 'Branch A', 'type' => Location::TYPE_BRANCH]);
+        $branchB = Location::create(['name' => 'Branch B', 'type' => Location::TYPE_BRANCH]);
+
+        // First branch created auto-becomes main.
+        $this->assertTrue($branchA->fresh()->is_main);
+        $this->assertFalse($branchB->fresh()->is_main);
+
+        // Can't unset the only main branch by editing it off.
+        $branchA->update(['is_main' => false]);
+        $this->assertTrue($branchA->fresh()->is_main);
+
+        // Can't delete the main branch.
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        $branchA->delete();
+    }
+
+    public function test_main_switches_to_a_different_branch_without_ever_having_zero(): void
+    {
+        $branchA = Location::create(['name' => 'Branch A', 'type' => Location::TYPE_BRANCH]);
+        $branchB = Location::create(['name' => 'Branch B', 'type' => Location::TYPE_BRANCH]);
+
+        $branchB->update(['is_main' => true]);
+
+        $this->assertFalse($branchA->fresh()->is_main);
+        $this->assertTrue($branchB->fresh()->is_main);
+        $this->assertSame($branchB->id, Location::main()->id);
+
+        // Branch A is no longer main, so it's deletable now (and it isn't the last branch).
+        $branchA = $branchA->fresh();
+        $this->assertTrue($branchA->isDeletable());
+        $branchA->delete();
+        $this->assertDatabaseMissing('locations', ['id' => $branchA->id]);
+
+        // Branch B is main and the only branch left — can't delete it either way.
+        $this->assertFalse($branchB->fresh()->isDeletable());
+    }
+
+    public function test_the_seeded_admin_account_is_tied_to_the_main_branch(): void
+    {
+        $this->seed(\Database\Seeders\DatabaseSeeder::class);
+
+        $admin = User::where('email', 'admin@wecko.test')->first();
+        $main = Location::main();
+
+        $this->assertNotNull($main, 'DemoSeeder should have created a main branch.');
+        $this->assertTrue($admin->hasRole('principal'));
+        $this->assertSame($main->id, $admin->home_location_id);
+    }
 }

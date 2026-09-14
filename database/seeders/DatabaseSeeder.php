@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Location;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -30,5 +31,9 @@ class DatabaseSeeder extends Seeder
         $this->call([
             DemoSeeder::class,
         ]);
+
+        // The principal operates out of the main branch — DemoSeeder creates
+        // branches, so this can only be set once it's run.
+        $principal->update(['home_location_id' => Location::main()?->id]);
     }
 }

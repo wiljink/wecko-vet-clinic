@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Concerns\HasResourcePermissions;
 use App\Filament\Resources\UserResource\Pages;
+use App\Models\Location;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -49,6 +50,7 @@ class UserResource extends Resource
                     ->helperText('Security level. "principal" has full access to everything.'),
                 Forms\Components\Select::make('home_location_id')->label('Home branch')
                     ->relationship('homeLocation', 'name', fn (\Illuminate\Database\Eloquent\Builder $query) => $query->branches())
+                    ->default(fn () => Location::main()?->id)
                     ->searchable()->preload()
                     ->helperText('Branch this user is restricted to. Principals can see and switch between every branch regardless of this setting.'),
             ]),

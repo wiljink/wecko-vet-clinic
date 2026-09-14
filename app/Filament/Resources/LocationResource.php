@@ -8,6 +8,7 @@ use App\Models\Location;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
@@ -16,7 +17,9 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class LocationResource extends Resource
 {
-    use IsReferenceResource;
+    use IsReferenceResource {
+        table as baseTable;
+    }
 
     protected static ?string $model = Location::class;
 
@@ -58,8 +61,20 @@ class LocationResource extends Resource
             Forms\Components\TextInput::make('phone')->tel()->maxLength(50),
             Forms\Components\TextInput::make('email')->email()->maxLength(255),
             Forms\Components\Toggle::make('is_main')->label('Main branch')
-                ->helperText('The default branch new staff and historical records fall back to. Only one branch can be main.'),
+                ->helperText('The default branch new staff and historical records fall back to. The system always keeps exactly one — switch it by marking a different branch main, not by unchecking this one.'),
         ];
+    }
+
+    public static function table(Table $table): Table
+    {
+        return static::baseTable($table)->actions([
+            Tables\Actions\EditAction::make(),
+            Tables\Actions\DeleteAction::make()
+                ->visible(fn (Location $record) => $record->isDeletable())
+                ->tooltip(fn (Location $record) => $record->is_main
+                    ? 'Make another branch main first'
+                    : null),
+        ]);
     }
 
     protected static function referenceTableColumns(): array

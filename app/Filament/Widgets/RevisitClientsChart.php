@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Models\Consultation;
 use App\Models\CounterSale;
+use App\Support\ChartPalette;
 use App\Support\LocationContext;
 use Filament\Widgets\ChartWidget;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
@@ -47,7 +48,10 @@ class RevisitClientsChart extends ChartWidget
 
         return [
             'datasets' => [
-                ['label' => "Monthly Revisit Clients {$year}", 'data' => array_values($counts)],
+                [
+                    'label' => "Monthly Revisit Clients {$year}", 'data' => array_values($counts),
+                    ...ChartPalette::dataset(ChartPalette::VIOLET), 'fill' => true,
+                ],
             ],
             'labels' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
         ];

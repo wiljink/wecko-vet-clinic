@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\InvoiceItem;
+use App\Support\ChartPalette;
 use App\Support\LocationContext;
 use Filament\Widgets\ChartWidget;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
@@ -32,7 +33,7 @@ class ServicesDistributionChart extends ChartWidget
         $from = Carbon::parse($this->filters['from'] ?? now()->startOfYear())->startOfDay();
         $to = Carbon::parse($this->filters['to'] ?? now())->endOfDay();
 
-        $labels = InvoiceItem::query()
+        $byGroup = InvoiceItem::query()
             ->join('invoices', 'invoices.id', '=', 'invoice_items.invoice_id')
             ->leftJoin('products', 'products.id', '=', 'invoice_items.product_id')
             ->leftJoin('groups', 'groups.id', '=', 'products.group_id')
@@ -41,16 +42,26 @@ class ServicesDistributionChart extends ChartWidget
             ->selectRaw('groups.name as group_name, invoice_items.kind as kind')
             ->selectRaw('SUM(invoice_items.line_total_inc_tax) as total')
             ->groupBy('groups.name', 'invoice_items.kind')
-            ->orderByDesc('total')
             ->get()
             ->groupBy(fn ($r) => $r->group_name ?: ucfirst($r->kind))
-            ->map(fn ($rows) => (float) $rows->sum('total'));
+            ->map(fn ($rows) => (float) $rows->sum('total'))
+            ->sortByDesc(fn ($total) => $total);
+
+        // Cap at the palette's colorblind-safe run and fold the long tail into "Other".
+        $top = $byGroup->take(count(ChartPalette::SEQUENCE) - 1);
+        $rest = $byGroup->skip($top->count())->sum();
+        $slices = $rest > 0 ? $top->merge(['Other' => $rest]) : $top;
+
+        $colors = array_slice(ChartPalette::SEQUENCE, 0, $top->count());
+        if ($rest > 0) {
+            $colors[] = ChartPalette::GRAY;
+        }
 
         return [
             'datasets' => [
-                ['data' => $labels->values()->all()],
+                ['data' => $slices->values()->all(), 'backgroundColor' => $colors],
             ],
-            'labels' => $labels->keys()->all(),
+            'labels' => $slices->keys()->all(),
         ];
     }
 }

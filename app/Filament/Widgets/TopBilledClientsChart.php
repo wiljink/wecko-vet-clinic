@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Invoice;
+use App\Support\ChartPalette;
 use App\Support\LocationContext;
 use Filament\Widgets\ChartWidget;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
@@ -44,7 +45,7 @@ class TopBilledClientsChart extends ChartWidget
 
         return [
             'datasets' => [
-                ['label' => 'Billed', 'data' => $rows->pluck('total')->map(fn ($t) => (float) $t)->all()],
+                ['label' => 'Billed', 'data' => $rows->pluck('total')->map(fn ($t) => (float) $t)->all(), ...ChartPalette::dataset(ChartPalette::ORANGE, 0.75)],
             ],
             'labels' => $rows->pluck('name')->all(),
         ];

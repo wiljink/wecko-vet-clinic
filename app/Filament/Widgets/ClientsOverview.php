@@ -4,7 +4,9 @@ namespace App\Filament\Widgets;
 
 use App\Models\Consultation;
 use App\Models\CounterSale;
+use App\Support\ChartPalette;
 use App\Support\LocationContext;
+use Filament\Support\Colors\Color;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -22,8 +24,10 @@ class ClientsOverview extends StatsOverviewWidget
         $today = now();
 
         return [
-            Stat::make('Daily Clients', $this->distinctClients($locationId, $today->copy()->startOfDay(), $today->copy()->endOfDay())),
-            Stat::make('Monthly Clients', $this->distinctClients($locationId, $today->copy()->startOfMonth(), $today->copy()->endOfMonth())),
+            Stat::make('Daily Clients', $this->distinctClients($locationId, $today->copy()->startOfDay(), $today->copy()->endOfDay()))
+                ->color(Color::hex(ChartPalette::MAGENTA))->extraAttributes(ChartPalette::statAccentAttributes(ChartPalette::MAGENTA)),
+            Stat::make('Monthly Clients', $this->distinctClients($locationId, $today->copy()->startOfMonth(), $today->copy()->endOfMonth()))
+                ->color(Color::hex(ChartPalette::GREEN))->extraAttributes(ChartPalette::statAccentAttributes(ChartPalette::GREEN)),
         ];
     }
 

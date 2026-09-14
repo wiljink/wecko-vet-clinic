@@ -4,7 +4,9 @@ namespace App\Filament\Widgets;
 
 use App\Models\Invoice;
 use App\Models\Payment;
+use App\Support\ChartPalette;
 use App\Support\LocationContext;
+use Filament\Support\Colors\Color;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -31,10 +33,14 @@ class SalesPaymentsOverview extends StatsOverviewWidget
             ->where('is_refund', false)->whereYear('received_at', $today->year)->whereMonth('received_at', $today->month)->sum('amount');
 
         return [
-            Stat::make('Daily Sales', '₱'.number_format((float) $dailySales, 2)),
-            Stat::make('Monthly Sales', '₱'.number_format((float) $monthlySales, 2)),
-            Stat::make('Daily Payments', '₱'.number_format((float) $dailyPayments, 2)),
-            Stat::make('Monthly Payments', '₱'.number_format((float) $monthlyPayments, 2)),
+            Stat::make('Daily Sales', '₱'.number_format((float) $dailySales, 2))
+                ->color(Color::hex(ChartPalette::BLUE))->extraAttributes(ChartPalette::statAccentAttributes(ChartPalette::BLUE)),
+            Stat::make('Monthly Sales', '₱'.number_format((float) $monthlySales, 2))
+                ->color(Color::hex(ChartPalette::ORANGE))->extraAttributes(ChartPalette::statAccentAttributes(ChartPalette::ORANGE)),
+            Stat::make('Daily Payments', '₱'.number_format((float) $dailyPayments, 2))
+                ->color(Color::hex(ChartPalette::AQUA))->extraAttributes(ChartPalette::statAccentAttributes(ChartPalette::AQUA)),
+            Stat::make('Monthly Payments', '₱'.number_format((float) $monthlyPayments, 2))
+                ->color(Color::hex(ChartPalette::YELLOW))->extraAttributes(ChartPalette::statAccentAttributes(ChartPalette::YELLOW)),
         ];
     }
 }

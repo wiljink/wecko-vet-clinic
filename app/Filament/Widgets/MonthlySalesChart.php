@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Invoice;
+use App\Support\ChartPalette;
 use App\Support\LocationContext;
 use Filament\Widgets\ChartWidget;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
@@ -28,8 +29,8 @@ class MonthlySalesChart extends ChartWidget
 
         return [
             'datasets' => [
-                ['label' => (string) $lastYear, 'data' => $this->monthlyTotals($locationId, $lastYear)],
-                ['label' => (string) $thisYear, 'data' => $this->monthlyTotals($locationId, $thisYear)],
+                ['label' => (string) $lastYear, 'data' => $this->monthlyTotals($locationId, $lastYear), ...ChartPalette::dataset(ChartPalette::BLUE)],
+                ['label' => (string) $thisYear, 'data' => $this->monthlyTotals($locationId, $thisYear), ...ChartPalette::dataset(ChartPalette::ORANGE)],
             ],
             'labels' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
         ];

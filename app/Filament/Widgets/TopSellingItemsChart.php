@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\InvoiceItem;
+use App\Support\ChartPalette;
 use App\Support\LocationContext;
 use Filament\Widgets\ChartWidget;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
@@ -45,7 +46,7 @@ class TopSellingItemsChart extends ChartWidget
 
         return [
             'datasets' => [
-                ['label' => 'Qty sold', 'data' => $rows->pluck('qty')->map(fn ($q) => (float) $q)->all()],
+                ['label' => 'Qty sold', 'data' => $rows->pluck('qty')->map(fn ($q) => (float) $q)->all(), ...ChartPalette::dataset(ChartPalette::BLUE, 0.75)],
             ],
             'labels' => $rows->pluck('name')->all(),
         ];

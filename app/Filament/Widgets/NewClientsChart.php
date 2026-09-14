@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 use App\Models\Client;
 use App\Models\Consultation;
 use App\Models\CounterSale;
+use App\Support\ChartPalette;
 use App\Support\LocationContext;
 use Filament\Widgets\ChartWidget;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
@@ -29,7 +30,10 @@ class NewClientsChart extends ChartWidget
 
         return [
             'datasets' => [
-                ['label' => "Monthly New Clients {$year}", 'data' => $this->monthlyCounts($locationId, $year)],
+                [
+                    'label' => "Monthly New Clients {$year}", 'data' => $this->monthlyCounts($locationId, $year),
+                    ...ChartPalette::dataset(ChartPalette::AQUA), 'fill' => true,
+                ],
             ],
             'labels' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
         ];

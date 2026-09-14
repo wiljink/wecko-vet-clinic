@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\Reminder;
 use App\Models\StockMovement;
 use Carbon\CarbonInterface;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -18,6 +19,12 @@ use Illuminate\Support\Facades\DB;
  */
 class ReportBuilder
 {
+    /** @return array<int, int> */
+    private function accessibleLocationIds(): array
+    {
+        return Auth::user()?->accessibleLocationIds() ?? [];
+    }
+
     private function frame(string $key, string $title, CarbonInterface $from, CarbonInterface $to): array
     {
         return [
@@ -41,6 +48,9 @@ class ReportBuilder
             ->leftJoin('groups', 'groups.id', '=', 'products.group_id')
             ->whereBetween('invoices.invoice_date', [$from->toDateString(), $to->toDateString()])
             ->where('invoices.status', '!=', 'void')
+            // This is a raw query builder call, not Eloquent, so it bypasses
+            // Invoice's BelongsToLocation scope — apply it explicitly.
+            ->where(fn ($q) => $q->whereIn('invoices.location_id', $this->accessibleLocationIds())->orWhereNull('invoices.location_id'))
             ->groupBy('groups.name')
             ->selectRaw('COALESCE(groups.name, ?) as grp, SUM(invoice_items.line_total_ex_tax) as net, SUM(invoice_items.line_tax) as vat, SUM(invoice_items.line_total_inc_tax) as gross', ['Uncategorised'])
             ->orderByDesc('gross')

@@ -6,6 +6,7 @@ use App\Filament\Concerns\HasResourcePermissions;
 use App\Filament\Resources\AccountAdjustmentResource\Pages;
 use App\Models\AccountAdjustment;
 use App\Models\Client;
+use App\Support\LocationContext;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -49,6 +50,7 @@ class AccountAdjustmentResource extends Resource
                 ->helperText('The peso amount by which the balance moves in the direction selected above.'),
             Forms\Components\DatePicker::make('adjusted_on')->default(now())->required()
                 ->helperText('The date the adjustment is effective from — it affects aging and statements from this date.'),
+            LocationContext::selectField()->helperText('Branch this adjustment applies to.'),
             Forms\Components\TextInput::make('reason')->required()->columnSpanFull()
                 ->placeholder('e.g. Goodwill discount, Clinic-Ware conversion, Bad debt write-off')
                 ->helperText('Why the balance is being corrected manually — kept on record for audit and shown against the entry.'),
@@ -62,6 +64,7 @@ class AccountAdjustmentResource extends Resource
                 Tables\Columns\TextColumn::make('reference')->searchable(),
                 Tables\Columns\TextColumn::make('adjusted_on')->date('d M Y')->sortable(),
                 Tables\Columns\TextColumn::make('client.full_name')->label('Client')->searchable(['surname']),
+                Tables\Columns\TextColumn::make('location.name')->label('Branch')->toggleable(),
                 Tables\Columns\TextColumn::make('direction')->badge()->colors(['success' => 'credit', 'danger' => 'debit']),
                 Tables\Columns\TextColumn::make('amount')->money('PHP'),
                 Tables\Columns\TextColumn::make('reason')->limit(50)->wrap(),

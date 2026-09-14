@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToLocation;
 use App\Models\Concerns\GeneratesReference;
 use App\Models\Concerns\RecordsActivity;
 use Illuminate\Database\Eloquent\Model;
@@ -9,12 +10,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AccountAdjustment extends Model
 {
-    use GeneratesReference, RecordsActivity;
+    use BelongsToLocation, GeneratesReference, RecordsActivity;
 
     protected string $referencePrefix = 'ACJ';
 
     protected $fillable = [
-        'reference', 'client_id', 'direction', 'reason', 'amount', 'invoice_id', 'adjusted_on', 'created_by',
+        'reference', 'client_id', 'location_id', 'direction', 'reason', 'amount', 'invoice_id', 'adjusted_on', 'created_by',
     ];
 
     protected $casts = ['amount' => 'decimal:2', 'adjusted_on' => 'date'];

@@ -128,6 +128,7 @@ class DemoSeeder extends Seeder
         // A couple of goodwill / write-off adjustments.
         \App\Models\Client::has('invoices')->inRandomOrder()->take(4)->get()->each(function (\App\Models\Client $client) {
             $client->accountAdjustments()->create([
+                'location_id' => $client->invoices()->latest('invoice_date')->value('location_id'),
                 'direction' => fake()->randomElement(['credit', 'credit', 'debit']),
                 'reason' => fake()->randomElement(['Goodwill discount', 'Loyalty credit', 'Clinic-Ware conversion balance', 'Interest on overdue account']),
                 'amount' => fake()->randomFloat(2, 50, 400),

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Filament\Widgets\SalesPaymentsOverview;
+use App\Models\AccountAdjustment;
 use App\Models\Client;
 use App\Models\Consultation;
 use App\Models\Invoice;
@@ -12,7 +13,9 @@ use App\Models\ProductStockLevel;
 use App\Models\StockMovement;
 use App\Models\StockTransfer;
 use App\Models\User;
+use App\Support\Reports\ReportBuilder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -186,5 +189,58 @@ class MultiBranchTest extends TestCase
         $this->assertNotNull($main, 'DemoSeeder should have created a main branch.');
         $this->assertTrue($admin->hasRole('principal'));
         $this->assertSame($main->id, $admin->home_location_id);
+    }
+
+    public function test_branch_pinned_user_only_sees_their_branch_account_adjustments(): void
+    {
+        $branchA = Location::create(['name' => 'Branch A', 'type' => Location::TYPE_BRANCH]);
+        $branchB = Location::create(['name' => 'Branch B', 'type' => Location::TYPE_BRANCH]);
+        $client = Client::create(['surname' => 'Owner']);
+
+        $adjA = AccountAdjustment::create([
+            'client_id' => $client->id, 'location_id' => $branchA->id,
+            'direction' => 'credit', 'reason' => 'Goodwill', 'amount' => 100,
+        ]);
+        $adjB = AccountAdjustment::create([
+            'client_id' => $client->id, 'location_id' => $branchB->id,
+            'direction' => 'credit', 'reason' => 'Goodwill', 'amount' => 200,
+        ]);
+
+        $userA = User::factory()->create(['home_location_id' => $branchA->id]);
+        $this->actingAs($userA);
+
+        $visible = AccountAdjustment::pluck('id')->all();
+        $this->assertContains($adjA->id, $visible);
+        $this->assertNotContains($adjB->id, $visible);
+
+        $principal = User::factory()->create()->assignRole('principal');
+        $this->actingAs($principal);
+        $visibleToPrincipal = AccountAdjustment::pluck('id')->all();
+        $this->assertContains($adjA->id, $visibleToPrincipal);
+        $this->assertContains($adjB->id, $visibleToPrincipal);
+    }
+
+    public function test_sales_vat_report_is_scoped_to_the_viewers_branch(): void
+    {
+        $branchA = Location::create(['name' => 'Branch A', 'type' => Location::TYPE_BRANCH]);
+        $branchB = Location::create(['name' => 'Branch B', 'type' => Location::TYPE_BRANCH]);
+        $client = Client::create(['surname' => 'Owner']);
+
+        $invoiceA = Invoice::create(['client_id' => $client->id, 'location_id' => $branchA->id, 'invoice_date' => now()]);
+        $invoiceA->items()->create(['kind' => 'service', 'description' => 'A', 'qty' => 1, 'unit_price_ex_tax' => 1000, 'tax_rate' => 0]);
+
+        $invoiceB = Invoice::create(['client_id' => $client->id, 'location_id' => $branchB->id, 'invoice_date' => now()]);
+        $invoiceB->items()->create(['kind' => 'service', 'description' => 'B', 'qty' => 1, 'unit_price_ex_tax' => 500, 'tax_rate' => 0]);
+
+        $userA = User::factory()->create(['home_location_id' => $branchA->id]);
+        $this->actingAs($userA);
+
+        $report = app(ReportBuilder::class)->salesVat(Carbon::now()->startOfYear(), Carbon::now()->endOfYear());
+        $this->assertEqualsWithDelta(1000.0, $report['tiles'][1]['value'], 0.01); // net sales — branch A only
+
+        $principal = User::factory()->create()->assignRole('principal');
+        $this->actingAs($principal);
+        $reportAll = app(ReportBuilder::class)->salesVat(Carbon::now()->startOfYear(), Carbon::now()->endOfYear());
+        $this->assertEqualsWithDelta(1500.0, $reportAll['tiles'][1]['value'], 0.01); // both branches
     }
 }

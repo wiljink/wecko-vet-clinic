@@ -37,8 +37,8 @@ class MultiBranchTest extends TestCase
 
     public function test_branch_pinned_user_only_sees_their_branch_invoices(): void
     {
-        $branchA = Location::create(['name' => 'Branch A']);
-        $branchB = Location::create(['name' => 'Branch B']);
+        $branchA = Location::create(['name' => 'Branch A', 'type' => Location::TYPE_BRANCH]);
+        $branchB = Location::create(['name' => 'Branch B', 'type' => Location::TYPE_BRANCH]);
 
         $client = Client::create(['surname' => 'Owner']);
         $invoiceA = Invoice::create(['client_id' => $client->id, 'location_id' => $branchA->id, 'invoice_date' => now()]);
@@ -61,8 +61,8 @@ class MultiBranchTest extends TestCase
     public function test_stock_movement_tracks_quantity_per_branch(): void
     {
         $this->actingAs(User::factory()->create()->assignRole('principal'));
-        $branchA = Location::create(['name' => 'Branch A']);
-        $branchB = Location::create(['name' => 'Branch B']);
+        $branchA = Location::create(['name' => 'Branch A', 'type' => Location::TYPE_BRANCH]);
+        $branchB = Location::create(['name' => 'Branch B', 'type' => Location::TYPE_BRANCH]);
         $product = $this->drug();
 
         StockMovement::record($product, 'opening', 50, ['location_id' => $branchA->id]);
@@ -77,8 +77,8 @@ class MultiBranchTest extends TestCase
     public function test_stock_transfer_moves_quantity_between_branches(): void
     {
         $this->actingAs(User::factory()->create()->assignRole('principal'));
-        $branchA = Location::create(['name' => 'Branch A']);
-        $branchB = Location::create(['name' => 'Branch B']);
+        $branchA = Location::create(['name' => 'Branch A', 'type' => Location::TYPE_BRANCH]);
+        $branchB = Location::create(['name' => 'Branch B', 'type' => Location::TYPE_BRANCH]);
         $product = $this->drug();
 
         StockMovement::record($product, 'opening', 30, ['location_id' => $branchA->id]);
@@ -96,8 +96,8 @@ class MultiBranchTest extends TestCase
 
     public function test_dashboard_sales_widget_reflects_branch_filter(): void
     {
-        $branchA = Location::create(['name' => 'Branch A']);
-        $branchB = Location::create(['name' => 'Branch B']);
+        $branchA = Location::create(['name' => 'Branch A', 'type' => Location::TYPE_BRANCH]);
+        $branchB = Location::create(['name' => 'Branch B', 'type' => Location::TYPE_BRANCH]);
         $client = Client::create(['surname' => 'Owner']);
 
         $invoiceA = Invoice::create(['client_id' => $client->id, 'location_id' => $branchA->id, 'invoice_date' => now()]);
@@ -119,7 +119,7 @@ class MultiBranchTest extends TestCase
     public function test_consultation_finalize_generates_invoice_at_same_branch(): void
     {
         $this->actingAs(User::factory()->create()->assignRole('principal'));
-        $branch = Location::create(['name' => 'Branch A']);
+        $branch = Location::create(['name' => 'Branch A', 'type' => Location::TYPE_BRANCH]);
         $client = Client::create(['surname' => 'Owner']);
         $patient = \App\Models\Patient::create([
             'client_id' => $client->id, 'name' => 'Rex', 'gender' => 'male',

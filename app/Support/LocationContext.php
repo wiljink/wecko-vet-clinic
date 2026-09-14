@@ -99,7 +99,7 @@ class LocationContext
     public static function selectField(string $name = 'location_id', string $label = 'Branch'): Select
     {
         return Select::make($name)->label($label)
-            ->relationship('location', 'name')
+            ->relationship('location', 'name', fn (\Illuminate\Database\Eloquent\Builder $query) => $query->branches())
             ->default(fn () => static::activeId())
             ->disabled(fn () => ! static::canSwitch())
             ->dehydrated()

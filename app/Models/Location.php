@@ -10,8 +10,12 @@ class Location extends Model
 {
     use RecordsActivity;
 
+    public const TYPE_BRANCH = 'branch';
+
+    public const TYPE_ROOM = 'room';
+
     protected $fillable = [
-        'name', 'code', 'description', 'address', 'phone', 'email', 'is_main', 'is_active',
+        'name', 'type', 'code', 'description', 'address', 'phone', 'email', 'is_main', 'is_active',
     ];
 
     protected $casts = ['is_active' => 'boolean', 'is_main' => 'boolean'];
@@ -20,7 +24,7 @@ class Location extends Model
     {
         static::saved(function (self $location) {
             if ($location->is_main) {
-                static::where('id', '!=', $location->id)->update(['is_main' => false]);
+                static::where('type', self::TYPE_BRANCH)->where('id', '!=', $location->id)->update(['is_main' => false]);
             }
         });
     }
@@ -30,8 +34,18 @@ class Location extends Model
         return $query->where('is_active', true);
     }
 
+    public function scopeBranches(Builder $query): Builder
+    {
+        return $query->where('type', self::TYPE_BRANCH);
+    }
+
+    public function scopeRooms(Builder $query): Builder
+    {
+        return $query->where('type', self::TYPE_ROOM);
+    }
+
     public static function main(): ?self
     {
-        return static::where('is_main', true)->first() ?? static::orderBy('id')->first();
+        return static::branches()->where('is_main', true)->first() ?? static::branches()->orderBy('id')->first();
     }
 }

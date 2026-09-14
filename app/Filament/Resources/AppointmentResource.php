@@ -49,7 +49,11 @@ class AppointmentResource extends Resource
                     ->relationship('provider', 'name', fn (\Illuminate\Database\Eloquent\Builder $query) => $query->where('is_provider', true))
                     ->searchable()->preload()
                     ->helperText('Vet or staff member who will see the patient.'),
-                LocationContext::selectField()->helperText('Branch or room where the appointment takes place.'),
+                LocationContext::selectField()->helperText('Branch where the appointment takes place.'),
+                Forms\Components\Select::make('room_id')->label('Room')
+                    ->relationship('room', 'name', fn (\Illuminate\Database\Eloquent\Builder $query) => $query->rooms())
+                    ->searchable()->preload()
+                    ->helperText('Exam room or bay, if this branch tracks them.'),
                 Forms\Components\DateTimePicker::make('starts_at')->required()->seconds(false)->native(false)->live()
                     ->helperText('Date and time the appointment is scheduled to begin.'),
                 Forms\Components\Select::make('duration_minutes')->options([
@@ -102,7 +106,8 @@ class AppointmentResource extends Resource
                 Tables\Columns\TextColumn::make('client.full_name')->label('Client')->searchable(['surname'])->sortable(),
                 Tables\Columns\TextColumn::make('patient.name')->label('Patient'),
                 Tables\Columns\TextColumn::make('provider.name')->label('Provider')->sortable(),
-                Tables\Columns\TextColumn::make('location.name')->label('Location')->toggleable(),
+                Tables\Columns\TextColumn::make('location.name')->label('Branch')->toggleable(),
+                Tables\Columns\TextColumn::make('room.name')->label('Room')->toggleable(),
                 Tables\Columns\TextColumn::make('reason.reason')->label('Reason')->toggleable(),
                 Tables\Columns\TextColumn::make('status.name')->label('Status')->badge()
                     ->color(fn (Appointment $r) => \Filament\Support\Colors\Color::hex($r->status?->color ?? '#64748b')),

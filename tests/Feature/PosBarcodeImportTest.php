@@ -23,6 +23,7 @@ class PosBarcodeImportTest extends TestCase
         parent::setUp();
         $this->seed(\Database\Seeders\RolesAndPermissionsSeeder::class);
         $this->seed(\Database\Seeders\ReferentialDataSeeder::class);
+        Location::create(['name' => 'Main Branch', 'type' => Location::TYPE_BRANCH, 'is_main' => true]);
     }
 
     private function drug(array $overrides = []): Product

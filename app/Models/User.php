@@ -72,7 +72,7 @@ class User extends Authenticatable implements FilamentUser
     public function accessibleLocationIds(): array
     {
         if ($this->hasRole('principal')) {
-            return Location::query()->pluck('id')->all();
+            return Location::branches()->pluck('id')->all();
         }
 
         return $this->home_location_id ? [$this->home_location_id] : [];

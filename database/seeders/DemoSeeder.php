@@ -52,6 +52,7 @@ class DemoSeeder extends Seeder
         $main = Location::firstOrCreate(
             ['name' => 'Wecko Pet Clinic — Quezon City'],
             [
+                'type' => Location::TYPE_BRANCH,
                 'code' => 'QC', 'address' => '123 Katipunan Ave, Quezon City, Metro Manila',
                 'phone' => '(02) 8123 4567', 'email' => 'qc@wecko.test', 'is_main' => true,
             ],
@@ -59,6 +60,7 @@ class DemoSeeder extends Seeder
         $second = Location::firstOrCreate(
             ['name' => 'Wecko Pet Clinic — Makati'],
             [
+                'type' => Location::TYPE_BRANCH,
                 'code' => 'MKT', 'address' => '456 Ayala Ave, Makati, Metro Manila',
                 'phone' => '(02) 8765 4321', 'email' => 'makati@wecko.test',
             ],
@@ -267,13 +269,13 @@ class DemoSeeder extends Seeder
         }
 
         $providers = User::where('is_provider', true)->pluck('id')->all();
-        $locations = \App\Models\Location::pluck('id')->all();
+        $rooms = \App\Models\Location::rooms()->pluck('id')->all();
         $reasons = \App\Models\AppointmentReason::pluck('id')->all();
         $statuses = \App\Models\AppointmentStatus::pluck('id', 'name');
         $labels = \App\Models\AppointmentLabel::pluck('id')->all();
         $notStarted = \App\Models\TaskStatus::where('name', 'Not Started')->value('id');
 
-        Patient::with('client')->inRandomOrder()->take(45)->get()->each(function (Patient $patient) use ($providers, $locations, $reasons, $statuses, $labels) {
+        Patient::with('client')->inRandomOrder()->take(45)->get()->each(function (Patient $patient) use ($providers, $rooms, $reasons, $statuses, $labels) {
             $start = fake()->boolean(65)
                 ? fake()->dateTimeBetween('now', '+3 weeks')
                 : fake()->dateTimeBetween('-3 weeks', 'now');
@@ -288,7 +290,8 @@ class DemoSeeder extends Seeder
                 'client_id' => $patient->client_id,
                 'patient_id' => $patient->id,
                 'provider_id' => fake()->randomElement($providers),
-                'location_id' => fake()->randomElement($locations),
+                'location_id' => fake()->randomElement($this->branches),
+                'room_id' => fake()->boolean(70) ? fake()->randomElement($rooms) : null,
                 'starts_at' => $start,
                 'ends_at' => (clone $start)->addMinutes($duration),
                 'duration_minutes' => $duration,

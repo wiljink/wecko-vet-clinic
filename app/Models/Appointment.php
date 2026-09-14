@@ -16,7 +16,7 @@ class Appointment extends Model
     use BelongsToLocation, RecordsActivity;
 
     protected $fillable = [
-        'client_id', 'patient_id', 'provider_id', 'location_id',
+        'client_id', 'patient_id', 'provider_id', 'location_id', 'room_id',
         'starts_at', 'ends_at', 'duration_minutes', 'all_day',
         'appointment_reason_id', 'appointment_label_id', 'appointment_status_id', 'notes',
         'recurrence_freq', 'recurrence_interval', 'recurrence_weekdays',
@@ -60,6 +60,11 @@ class Appointment extends Model
     public function provider(): BelongsTo
     {
         return $this->belongsTo(User::class, 'provider_id');
+    }
+
+    public function room(): BelongsTo
+    {
+        return $this->belongsTo(Location::class, 'room_id');
     }
 
     public function reason(): BelongsTo
@@ -133,6 +138,7 @@ class Appointment extends Model
                 'patient_id' => $this->patient_id,
                 'provider_id' => $this->provider_id,
                 'location_id' => $this->location_id,
+                'room_id' => $this->room_id,
                 'starts_at' => $cursor,
                 'ends_at' => $cursor->copy()->addMinutes($this->duration_minutes),
                 'duration_minutes' => $this->duration_minutes,

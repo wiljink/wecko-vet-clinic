@@ -78,6 +78,16 @@ return new class extends Migration
 
     private function backfill(): void
     {
+        // Nothing to backfill on a genuinely fresh install — the app's own
+        // seeders create real branches, so don't invent a placeholder one.
+        $hasExistingData = DB::table('locations')->exists()
+            || DB::table('users')->exists()
+            || DB::table('products')->exists();
+
+        if (! $hasExistingData) {
+            return;
+        }
+
         $mainId = DB::table('locations')->where('is_main', true)->value('id');
 
         if (! $mainId) {

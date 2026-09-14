@@ -48,7 +48,8 @@ class UserResource extends Resource
                 Forms\Components\Select::make('roles')->multiple()->relationship('roles', 'name')->preload()
                     ->helperText('Security level. "principal" has full access to everything.'),
                 Forms\Components\Select::make('home_location_id')->label('Home branch')
-                    ->relationship('homeLocation', 'name')->searchable()->preload()
+                    ->relationship('homeLocation', 'name', fn (\Illuminate\Database\Eloquent\Builder $query) => $query->branches())
+                    ->searchable()->preload()
                     ->helperText('Branch this user is restricted to. Principals can see and switch between every branch regardless of this setting.'),
             ]),
             Forms\Components\Section::make('Access')->columns(3)->schema([

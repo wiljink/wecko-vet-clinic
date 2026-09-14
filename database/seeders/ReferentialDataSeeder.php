@@ -179,7 +179,7 @@ class ReferentialDataSeeder extends Seeder
             ['Grooming Room', 'Grooming and bathing'],
             ['Home / Farm Visit', 'Off-site visit'],
         ] as [$name, $desc]) {
-            Location::firstOrCreate(['name' => $name], ['description' => $desc]);
+            Location::firstOrCreate(['name' => $name], ['type' => Location::TYPE_ROOM, 'description' => $desc]);
         }
 
         $year = now()->year;

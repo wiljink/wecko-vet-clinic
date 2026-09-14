@@ -244,7 +244,7 @@ class MultiBranchTest extends TestCase
         $this->assertEqualsWithDelta(1500.0, $reportAll['tiles'][1]['value'], 0.01); // both branches
     }
 
-    public function test_setup_is_principal_only_except_rooms_and_document_templates(): void
+    public function test_setup_is_principal_only_except_rooms_and_document_templates_for_clinical_staff(): void
     {
         $vet = User::factory()->create()->assignRole('veterinarian');
         $nurse = User::factory()->create()->assignRole('nurse');
@@ -256,16 +256,23 @@ class MultiBranchTest extends TestCase
             $this->assertFalse($receptionist->can("view_any_{$key}"), "receptionist should not see Setup > {$key}");
         }
 
-        foreach ([$vet, $nurse, $receptionist] as $branchStaff) {
-            $this->assertTrue($branchStaff->can('view_any_room'));
-            $this->assertTrue($branchStaff->can('create_room'));
-            $this->assertTrue($branchStaff->can('update_room'));
-            $this->assertTrue($branchStaff->can('delete_room'));
+        foreach ([$vet, $nurse] as $clinicalStaff) {
+            $this->assertTrue($clinicalStaff->can('view_any_room'));
+            $this->assertTrue($clinicalStaff->can('create_room'));
+            $this->assertTrue($clinicalStaff->can('update_room'));
+            $this->assertTrue($clinicalStaff->can('delete_room'));
 
-            $this->assertTrue($branchStaff->can('view_any_document_template'));
-            $this->assertTrue($branchStaff->can('create_document_template'));
-            $this->assertTrue($branchStaff->can('update_document_template'));
-            $this->assertTrue($branchStaff->can('delete_document_template'));
+            $this->assertTrue($clinicalStaff->can('view_any_document_template'));
+            $this->assertTrue($clinicalStaff->can('create_document_template'));
+            $this->assertTrue($clinicalStaff->can('update_document_template'));
+            $this->assertTrue($clinicalStaff->can('delete_document_template'));
+        }
+
+        // Receptionist is front desk only — no Inventory, no Setup at all.
+        $this->assertFalse($receptionist->can('view_any_room'));
+        $this->assertFalse($receptionist->can('view_any_document_template'));
+        foreach (['product', 'supplier', 'stock_movement', 'inventory_order', 'stock_receipt', 'stock_take', 'inventory_adjustment', 'inventory_return', 'stock_transfer'] as $key) {
+            $this->assertFalse($receptionist->can("view_any_{$key}"), "receptionist should not see Inventory > {$key}");
         }
     }
 }

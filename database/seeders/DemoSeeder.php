@@ -46,27 +46,35 @@ class DemoSeeder extends Seeder
         $this->reminders();
     }
 
-    /** Two branches so the multi-branch dashboard and stock features have real data to show. */
+    /** Three branches (Zamboanga Peninsula / Northern Mindanao) so the multi-branch dashboard and stock features have real data to show. */
     private function branches(): void
     {
         $main = Location::firstOrCreate(
-            ['name' => 'Wecko Pet Clinic — Quezon City'],
+            ['name' => 'Wecko Pet Clinic — Ozamis'],
             [
                 'type' => Location::TYPE_BRANCH,
-                'code' => 'QC', 'address' => '123 Katipunan Ave, Quezon City, Metro Manila',
-                'phone' => '(02) 8123 4567', 'email' => 'qc@wecko.test', 'is_main' => true,
+                'code' => 'OZC', 'address' => 'Don Anceto Peña St, Ozamis City, Misamis Occidental',
+                'phone' => '(088) 521 1234', 'email' => 'ozamis@wecko.test', 'is_main' => true,
             ],
         );
-        $second = Location::firstOrCreate(
-            ['name' => 'Wecko Pet Clinic — Makati'],
+        $pagadian = Location::firstOrCreate(
+            ['name' => 'Wecko Pet Clinic — Pagadian'],
             [
                 'type' => Location::TYPE_BRANCH,
-                'code' => 'MKT', 'address' => '456 Ayala Ave, Makati, Metro Manila',
-                'phone' => '(02) 8765 4321', 'email' => 'makati@wecko.test',
+                'code' => 'PGD', 'address' => 'Rizal Ave, Pagadian City, Zamboanga del Sur',
+                'phone' => '(062) 214 5678', 'email' => 'pagadian@wecko.test',
+            ],
+        );
+        $iligan = Location::firstOrCreate(
+            ['name' => 'Wecko Pet Clinic — Iligan'],
+            [
+                'type' => Location::TYPE_BRANCH,
+                'code' => 'ILG', 'address' => 'Quezon Ave, Iligan City, Lanao del Norte',
+                'phone' => '(063) 221 9876', 'email' => 'iligan@wecko.test',
             ],
         );
 
-        $this->branches = [$main->id, $second->id];
+        $this->branches = [$main->id, $pagadian->id, $iligan->id];
     }
 
     private function reminders(): void
@@ -416,19 +424,15 @@ class DemoSeeder extends Seeder
                 'print_label' => $group === 'Drugs',
             ]);
 
-            // Opening stock at the main branch, plus a smaller holding at the second branch.
-            StockMovement::record($p, 'opening', fake()->numberBetween(20, 150), [
-                'location_id' => $this->branches[0],
-                'reason' => 'Opening balance',
-                'unit_cost_ex_tax' => $cost,
-                'moved_at' => now()->subMonths(2),
-            ]);
-            StockMovement::record($p, 'opening', fake()->numberBetween(10, 60), [
-                'location_id' => $this->branches[1],
-                'reason' => 'Opening balance',
-                'unit_cost_ex_tax' => $cost,
-                'moved_at' => now()->subMonths(2),
-            ]);
+            // Opening stock at the main branch, plus a smaller holding at every other branch.
+            foreach ($this->branches as $i => $branchId) {
+                StockMovement::record($p, 'opening', fake()->numberBetween($i === 0 ? 20 : 10, $i === 0 ? 150 : 60), [
+                    'location_id' => $branchId,
+                    'reason' => 'Opening balance',
+                    'unit_cost_ex_tax' => $cost,
+                    'moved_at' => now()->subMonths(2),
+                ]);
+            }
         }
 
         // A posted stock receipt brings the vaccines onto the shelf at the main branch.

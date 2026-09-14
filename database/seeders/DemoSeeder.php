@@ -58,7 +58,7 @@ class DemoSeeder extends Seeder
             ],
         );
         $pagadian = Location::firstOrCreate(
-            ['name' => 'Wicko Vet Clinic — Pagadian'],
+            ['name' => 'Wicko Vet Clinic Pagadian'],
             [
                 'type' => Location::TYPE_BRANCH,
                 'code' => 'PGD', 'address' => 'Rizal Ave, Pagadian City, Zamboanga del Sur',
@@ -66,7 +66,7 @@ class DemoSeeder extends Seeder
             ],
         );
         $iligan = Location::firstOrCreate(
-            ['name' => 'Wicko Vet Clinic — Iligan'],
+            ['name' => 'Wicko Vet Clinic Iligan'],
             [
                 'type' => Location::TYPE_BRANCH,
                 'code' => 'ILG', 'address' => 'Quezon Ave, Iligan City, Lanao del Norte',

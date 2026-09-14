@@ -6,6 +6,7 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use App\Models\User;
 use Filament\Navigation\NavigationGroup;
 use Filament\Pages\Auth\Login;
 use Filament\Panel;
@@ -33,11 +34,16 @@ class AdminPanelProvider extends PanelProvider
                 fn () => view('filament.partials.login-pets-background'),
                 scopes: Login::class,
             )
-            ->renderHook(
-                PanelsRenderHook::SIDEBAR_FOOTER,
-                fn () => view('filament.partials.branch-badge'),
-            )
-            ->brandName('Wicko Vet Clinic')
+            ->brandName(function () {
+                /** @var User|null $user */
+                $user = auth()->user();
+
+                if ($user && ! $user->canSwitchLocation() && $user->homeLocation) {
+                    return $user->homeLocation->name;
+                }
+
+                return 'Wicko Vet Clinic';
+            })
             ->colors([
                 'primary' => Color::Teal,
             ])

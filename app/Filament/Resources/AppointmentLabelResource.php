@@ -26,9 +26,12 @@ class AppointmentLabelResource extends Resource
     protected static function referenceFormFields(): array
     {
         return [
-            Forms\Components\TextInput::make('name')->required()->maxLength(255),
-            Forms\Components\TextInput::make('menu_caption')->maxLength(255),
-            Forms\Components\ColorPicker::make('color')->required()->default('#64748b'),
+            Forms\Components\TextInput::make('name')->required()->maxLength(255)
+                ->helperText('Label available when tagging an appointment, e.g. Surgery or Urgent.'),
+            Forms\Components\TextInput::make('menu_caption')->maxLength(255)
+                ->helperText('Shorter text shown on the label when space is tight on the calendar.'),
+            Forms\Components\ColorPicker::make('color')->required()->default('#64748b')
+                ->helperText('Colour swatch used to highlight appointments with this label on the calendar.'),
         ];
     }
 

@@ -61,16 +61,22 @@ class StatementRunner extends Page implements HasForms
     public function form(Form $form): Form
     {
         return $form->schema([
-            DatePicker::make('from_date')->required(),
-            DatePicker::make('to_date')->required(),
+            DatePicker::make('from_date')->required()
+                ->helperText('Start of the period the generated statements will cover.'),
+            DatePicker::make('to_date')->required()
+                ->helperText('End of the period — the balance and aging shown on each statement are as at this date.'),
             TextInput::make('min_balance')->numeric()->prefix('₱')->default(0)
                 ->helperText('Skip accounts under this balance.'),
             Select::make('fee_type')->label('Bookkeeping / late fee')->options([
                 'none' => 'None', 'fixed' => 'Fixed amount', 'percent' => 'Percent of balance',
-            ])->default('none')->live(),
-            TextInput::make('fee_value')->numeric()->visible(fn ($get) => $get('fee_type') !== 'none'),
-            Toggle::make('exclude_no_activity')->label('Exclude accounts with no transactions in the period')->default(true),
-            Select::make('channel')->options(['email' => 'Email', 'print' => 'Print queue'])->default('email'),
+            ])->default('none')->live()
+                ->helperText('Whether to post an extra debit adjustment onto each statemented account, and how it is calculated.'),
+            TextInput::make('fee_value')->numeric()->visible(fn ($get) => $get('fee_type') !== 'none')
+                ->helperText('The fixed peso amount, or the percentage of the balance, charged per the fee type selected above.'),
+            Toggle::make('exclude_no_activity')->label('Exclude accounts with no transactions in the period')->default(true)
+                ->helperText('Skip sending a statement to clients who had no invoices or payments in this period.'),
+            Select::make('channel')->options(['email' => 'Email', 'print' => 'Print queue'])->default('email')
+                ->helperText('Whether statements are emailed to clients immediately or queued for printing and posting.'),
         ])->columns(2)->statePath('data');
     }
 

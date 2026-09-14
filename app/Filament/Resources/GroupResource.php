@@ -27,9 +27,11 @@ class GroupResource extends Resource
     {
         return [
             Forms\Components\TextInput::make('name')->required()->maxLength(255)
-                ->disabled(fn (?\App\Models\Group $record) => $record?->is_protected),
+                ->disabled(fn (?\App\Models\Group $record) => $record?->is_protected)
+                ->helperText('Category used to organise products/services in price lists and sales reports.'),
             Forms\Components\Select::make('applies_to')->required()->default('both')
-                ->options(['product' => 'Products', 'service' => 'Services', 'both' => 'Both']),
+                ->options(['product' => 'Products', 'service' => 'Services', 'both' => 'Both'])
+                ->helperText('Limits this group to product records, service records, or lets it be used for both.'),
             Forms\Components\Placeholder::make('protected')->content('System group — cannot be renamed or removed.')
                 ->visible(fn (?\App\Models\Group $record) => $record?->is_protected),
         ];

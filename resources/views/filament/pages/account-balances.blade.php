@@ -7,13 +7,7 @@
         @php($client = $this->client)
 
         <div class="grid grid-cols-2 gap-4 md:grid-cols-5">
-            @foreach ([
-                'current' => 'Current',
-                'b1' => '1 period',
-                'b2' => '2 periods',
-                'b3' => '3+ periods',
-                'total' => 'Total owing',
-            ] as $key => $label)
+            @foreach (\App\Support\ClientLedger::agingLabels() + ['total' => 'Total owing'] as $key => $label)
                 <div class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
                     <div class="text-xs uppercase text-gray-500">{{ $label }}</div>
                     <div class="mt-1 text-lg font-semibold {{ $key === 'total' ? 'text-primary-600' : '' }}">

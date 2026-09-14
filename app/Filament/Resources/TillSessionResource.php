@@ -35,13 +35,17 @@ class TillSessionResource extends Resource
 
         return $form->schema([
             Forms\Components\Grid::make(3)->schema([
-                Forms\Components\DatePicker::make('session_date')->default(now())->required(),
-                Forms\Components\Select::make('location_id')->relationship('location', 'name')->searchable(),
-                Forms\Components\TextInput::make('opening_float')->numeric()->prefix('₱')->default(0)->required(),
+                Forms\Components\DatePicker::make('session_date')->default(now())->required()
+                    ->helperText('The trading day this till count belongs to.'),
+                Forms\Components\Select::make('location_id')->relationship('location', 'name')->searchable()
+                    ->helperText('Branch drawer being counted, for clinics with more than one till.'),
+                Forms\Components\TextInput::make('opening_float')->numeric()->prefix('₱')->default(0)->required()
+                    ->helperText('Cash left in the drawer to start the day — excluded from the day\'s takings when the till is reconciled.'),
             ]),
             Forms\Components\Fieldset::make('Count the drawer')->schema(
                 collect($denoms)->map(fn ($d) => Forms\Components\TextInput::make("denominations.{$d}")
-                    ->label('₱'.number_format((int) $d))->numeric()->default(0)->minValue(0))->all()
+                    ->label('₱'.number_format((int) $d))->numeric()->default(0)->minValue(0)
+                    ->helperText('How many of this note/coin are physically in the drawer.'))->all()
             )->columns(3),
         ]);
     }

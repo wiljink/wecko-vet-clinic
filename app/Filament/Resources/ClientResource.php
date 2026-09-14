@@ -32,27 +32,38 @@ class ClientResource extends Resource
             Forms\Components\Tabs::make()->columnSpanFull()->tabs([
                 Forms\Components\Tabs\Tab::make('Personal')->schema([
                     Forms\Components\Grid::make(3)->schema([
-                        Forms\Components\Select::make('title_id')->relationship('title', 'name')->preload(),
-                        Forms\Components\TextInput::make('given_name'),
-                        Forms\Components\TextInput::make('middle_name'),
+                        Forms\Components\Select::make('title_id')->relationship('title', 'name')->preload()
+                            ->helperText('Mr / Mrs / Dr — printed on letters and statements.'),
+                        Forms\Components\TextInput::make('given_name')
+                            ->helperText('Leave blank for clients who go by a company name or surname only.'),
+                        Forms\Components\TextInput::make('middle_name')
+                            ->helperText('Optional — rarely needed outside legal correspondence.'),
                         Forms\Components\TextInput::make('surname')->required()
                             ->helperText('The only mandatory field.'),
-                        Forms\Components\TextInput::make('company_name'),
+                        Forms\Components\TextInput::make('company_name')
+                            ->helperText('For farms, breeders, or businesses billed as the account holder.'),
                         Forms\Components\Toggle::make('use_company_as_first_address')
-                            ->label('Use company name as first address line'),
+                            ->label('Use company name as first address line')
+                            ->helperText('Prints the company name instead of the client\'s name on mailing labels.'),
                         Forms\Components\TextInput::make('partner_name')
                             ->helperText('Trusted family member who may bring patients in under this account.'),
-                        Forms\Components\TextInput::make('email')->email(),
+                        Forms\Components\TextInput::make('email')->email()
+                            ->helperText('Used for e-statements and appointment/vaccination reminders if enabled below.'),
                     ]),
                 ]),
 
                 Forms\Components\Tabs\Tab::make('Phones')->schema([
                     Forms\Components\Grid::make(2)->schema([
-                        Forms\Components\TextInput::make('residence_phone')->tel(),
-                        Forms\Components\TextInput::make('mobile_phone')->tel(),
-                        Forms\Components\TextInput::make('office_phone')->tel(),
-                        Forms\Components\TextInput::make('office_ext')->label('Office ext.'),
-                        Forms\Components\TextInput::make('fax')->tel(),
+                        Forms\Components\TextInput::make('residence_phone')->tel()
+                            ->helperText('Home landline, if the client has one.'),
+                        Forms\Components\TextInput::make('mobile_phone')->tel()
+                            ->helperText('Primary contact number — required for SMS reminders.'),
+                        Forms\Components\TextInput::make('office_phone')->tel()
+                            ->helperText('Work landline for daytime contact.'),
+                        Forms\Components\TextInput::make('office_ext')->label('Office ext.')
+                            ->helperText('Extension to reach the client directly at their office number.'),
+                        Forms\Components\TextInput::make('fax')->tel()
+                            ->helperText('Rarely used now — kept for referring vets and insurers who still fax records.'),
                     ]),
                 ]),
 
@@ -64,18 +75,24 @@ class ClientResource extends Resource
                         Forms\Components\Select::make('referral_id')->label('Referred by')
                             ->relationship('referral', 'name')->preload()->createOptionForm([
                                 Forms\Components\TextInput::make('name')->required(),
-                            ]),
+                            ])
+                            ->helperText('Where the client heard about the clinic — used for marketing reporting.'),
                         Forms\Components\Select::make('payment_type')->options([
                             'Cash' => 'Cash', 'Account' => 'Account', 'Card' => 'Card', 'GCash' => 'GCash',
-                        ]),
+                        ])
+                            ->helperText('Client\'s usual way of paying — a preference, not a restriction at the counter.'),
                         Forms\Components\Select::make('statement_type')->options([
                             'email' => 'Email', 'print' => 'Print', 'none' => 'No statement',
-                        ])->default('email'),
+                        ])->default('email')
+                            ->helperText('How periodic account statements are delivered to this client.'),
                         Forms\Components\TextInput::make('discount_pct')->label('Standing discount %')
-                            ->numeric()->default(0)->suffix('%'),
-                        Forms\Components\DatePicker::make('account_opened_on'),
+                            ->numeric()->default(0)->suffix('%')
+                            ->helperText('Applied automatically to new invoice lines for this client (e.g. staff, rescue, multi-pet discount).'),
+                        Forms\Components\DatePicker::make('account_opened_on')
+                            ->helperText('Date the account was first created — for record-keeping only.'),
                     ]),
-                    Forms\Components\Textarea::make('notes')->columnSpanFull(),
+                    Forms\Components\Textarea::make('notes')->columnSpanFull()
+                        ->helperText('Internal notes for staff only — never shown on client-facing documents.'),
                     Forms\Components\Toggle::make('is_active')->default(true)
                         ->helperText('Inactive clients are hidden by default. A client with references on file cannot be deleted — make them inactive instead.'),
                 ]),
@@ -84,19 +101,28 @@ class ClientResource extends Resource
                     Forms\Components\Placeholder::make('note')
                         ->content('SMS needs a mobile number on file; email needs an email address.'),
                     Forms\Components\Fieldset::make('Appointments')->schema([
-                        Forms\Components\Checkbox::make('appointments_by_letter')->label('Letter'),
-                        Forms\Components\Checkbox::make('appointments_by_email')->label('Email'),
-                        Forms\Components\Checkbox::make('appointments_by_sms')->label('SMS'),
+                        Forms\Components\Checkbox::make('appointments_by_letter')->label('Letter')
+                            ->helperText('Send appointment confirmations by post.'),
+                        Forms\Components\Checkbox::make('appointments_by_email')->label('Email')
+                            ->helperText('Send appointment confirmations by email.'),
+                        Forms\Components\Checkbox::make('appointments_by_sms')->label('SMS')
+                            ->helperText('Send appointment confirmations by text — requires a mobile number on file.'),
                     ])->columns(3),
                     Forms\Components\Fieldset::make('Reminders')->schema([
-                        Forms\Components\Checkbox::make('reminders_by_letter')->label('Letter'),
-                        Forms\Components\Checkbox::make('reminders_by_email')->label('Email'),
-                        Forms\Components\Checkbox::make('reminders_by_sms')->label('SMS'),
+                        Forms\Components\Checkbox::make('reminders_by_letter')->label('Letter')
+                            ->helperText('Send vaccination/health reminders by post.'),
+                        Forms\Components\Checkbox::make('reminders_by_email')->label('Email')
+                            ->helperText('Send vaccination/health reminders by email.'),
+                        Forms\Components\Checkbox::make('reminders_by_sms')->label('SMS')
+                            ->helperText('Send vaccination/health reminders by text — requires a mobile number on file.'),
                     ])->columns(3),
                     Forms\Components\Fieldset::make('Marketing')->schema([
-                        Forms\Components\Checkbox::make('marketing_by_letter')->label('Letter'),
-                        Forms\Components\Checkbox::make('marketing_by_email')->label('Email'),
-                        Forms\Components\Checkbox::make('marketing_by_sms')->label('SMS'),
+                        Forms\Components\Checkbox::make('marketing_by_letter')->label('Letter')
+                            ->helperText('Include this client in postal marketing and newsletter mailouts.'),
+                        Forms\Components\Checkbox::make('marketing_by_email')->label('Email')
+                            ->helperText('Include this client in email marketing and newsletter mailouts.'),
+                        Forms\Components\Checkbox::make('marketing_by_sms')->label('SMS')
+                            ->helperText('Include this client in SMS marketing — check opt-in rules before enabling.'),
                     ])->columns(3),
                 ]),
             ]),
@@ -145,6 +171,9 @@ class ClientResource extends Resource
         return [
             RelationManagers\AddressesRelationManager::class,
             RelationManagers\PatientsRelationManager::class,
+            RelationManagers\ConsultationsRelationManager::class,
+            RelationManagers\PrescriptionsRelationManager::class,
+            RelationManagers\VaccinationsRelationManager::class,
         ];
     }
 

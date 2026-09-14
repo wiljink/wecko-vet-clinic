@@ -36,31 +36,41 @@ class AppointmentResource extends Resource
                 Forms\Components\Select::make('client_id')->label('Client')
                     ->relationship('client', 'surname')
                     ->getOptionLabelFromRecordUsing(fn (Client $c) => $c->full_name)
-                    ->searchable(['surname', 'given_name'])->preload()->live(),
+                    ->searchable(['surname', 'given_name'])->preload()->live()
+                    ->helperText('Who the appointment is booked for.'),
                 Forms\Components\Select::make('patient_id')->label('Patient')
                     ->options(fn (Forms\Get $get) => $get('client_id')
                         ? Patient::where('client_id', $get('client_id'))->pluck('name', 'id')
                         : [])
-                    ->searchable(),
+                    ->searchable()
+                    ->helperText('Which of the client\'s patients this visit is for.'),
                 Forms\Components\Select::make('provider_id')->label('Provider')
                     ->relationship('provider', 'name', fn (\Illuminate\Database\Eloquent\Builder $query) => $query->where('is_provider', true))
-                    ->searchable()->preload(),
-                Forms\Components\Select::make('location_id')->relationship('location', 'name')->searchable()->preload(),
-                Forms\Components\DateTimePicker::make('starts_at')->required()->seconds(false)->native(false)->live(),
+                    ->searchable()->preload()
+                    ->helperText('Vet or staff member who will see the patient.'),
+                Forms\Components\Select::make('location_id')->relationship('location', 'name')->searchable()->preload()
+                    ->helperText('Clinic branch or room where the appointment takes place.'),
+                Forms\Components\DateTimePicker::make('starts_at')->required()->seconds(false)->native(false)->live()
+                    ->helperText('Date and time the appointment is scheduled to begin.'),
                 Forms\Components\Select::make('duration_minutes')->options([
                     10 => '10 min', 15 => '15 min', 20 => '20 min', 30 => '30 min',
                     45 => '45 min', 60 => '1 hour', 90 => '1½ hours', 120 => '2 hours',
-                ])->default(15)->required(),
-                Forms\Components\Toggle::make('all_day')->label('All-day event'),
+                ])->default(15)->required()
+                    ->helperText('How long the slot is blocked out on the calendar.'),
+                Forms\Components\Toggle::make('all_day')->label('All-day event')
+                    ->helperText('Blocks out the whole day instead of a specific time slot.'),
                 Forms\Components\Select::make('appointment_status_id')->label('Status')
                     ->relationship('status', 'name')
-                    ->default(fn () => AppointmentStatus::where('is_default', true)->value('id'))->preload(),
+                    ->default(fn () => AppointmentStatus::where('is_default', true)->value('id'))->preload()
+                    ->helperText('Where the appointment stands, e.g. confirmed, arrived, completed.'),
                 Forms\Components\Select::make('appointment_reason_id')->label('Reason')
                     ->relationship('reason', 'reason')->searchable()->preload()
                     ->helperText('Carried forward to the consultation.'),
                 Forms\Components\Select::make('appointment_label_id')->label('Label')
-                    ->relationship('label', 'name')->preload(),
-                Forms\Components\Textarea::make('notes')->columnSpanFull(),
+                    ->relationship('label', 'name')->preload()
+                    ->helperText('Colour-coded tag for scanning the calendar at a glance, e.g. Surgery, Checkup.'),
+                Forms\Components\Textarea::make('notes')->columnSpanFull()
+                    ->helperText('Internal notes about this appointment; not shown to the client.'),
             ]),
 
             Forms\Components\Section::make('Recurrence')->collapsed()->columns(3)->schema([
@@ -68,13 +78,17 @@ class AppointmentResource extends Resource
                     ->options([
                         'daily' => 'Daily', 'weekday' => 'Every weekday', 'weekly' => 'Weekly',
                         'monthly' => 'Monthly', 'yearly' => 'Yearly',
-                    ])->live(),
+                    ])->live()
+                    ->helperText('Leave blank for a one-off appointment; set this to generate a repeating series.'),
                 Forms\Components\TextInput::make('recurrence_interval')->numeric()->default(1)
-                    ->label('Every N')->visible(fn (Forms\Get $get) => filled($get('recurrence_freq'))),
+                    ->label('Every N')->visible(fn (Forms\Get $get) => filled($get('recurrence_freq')))
+                    ->helperText('E.g. 2 with "Weekly" repeats the appointment every other week.'),
                 Forms\Components\DatePicker::make('recurrence_until')->label('Until')
-                    ->visible(fn (Forms\Get $get) => filled($get('recurrence_freq'))),
+                    ->visible(fn (Forms\Get $get) => filled($get('recurrence_freq')))
+                    ->helperText('Last date on which a recurring occurrence can be generated.'),
                 Forms\Components\TextInput::make('recurrence_count')->numeric()->label('Or after N occurrences')->maxValue(60)
-                    ->visible(fn (Forms\Get $get) => filled($get('recurrence_freq'))),
+                    ->visible(fn (Forms\Get $get) => filled($get('recurrence_freq')))
+                    ->helperText('Stop generating new occurrences after this many appointments, instead of using an end date.'),
             ]),
         ]);
     }

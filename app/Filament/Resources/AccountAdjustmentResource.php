@@ -39,15 +39,19 @@ class AccountAdjustmentResource extends Resource
             Forms\Components\Select::make('client_id')->required()
                 ->relationship('client', 'surname')
                 ->getOptionLabelFromRecordUsing(fn (Client $c) => $c->full_name)
-                ->searchable(['surname', 'given_name'])->preload(),
+                ->searchable(['surname', 'given_name'])->preload()
+                ->helperText('The account whose balance this manual adjustment will change.'),
             Forms\Components\Select::make('direction')->required()->options([
                 'credit' => 'Credit (reduce what they owe)',
                 'debit' => 'Debit (increase what they owe)',
-            ]),
-            Forms\Components\TextInput::make('amount')->numeric()->prefix('₱')->required(),
-            Forms\Components\DatePicker::make('adjusted_on')->default(now())->required(),
+            ])->helperText('Credit lowers the client balance without a payment being received; debit raises it without an invoice being issued.'),
+            Forms\Components\TextInput::make('amount')->numeric()->prefix('₱')->required()
+                ->helperText('The peso amount by which the balance moves in the direction selected above.'),
+            Forms\Components\DatePicker::make('adjusted_on')->default(now())->required()
+                ->helperText('The date the adjustment is effective from — it affects aging and statements from this date.'),
             Forms\Components\TextInput::make('reason')->required()->columnSpanFull()
-                ->placeholder('e.g. Goodwill discount, Clinic-Ware conversion, Bad debt write-off'),
+                ->placeholder('e.g. Goodwill discount, Clinic-Ware conversion, Bad debt write-off')
+                ->helperText('Why the balance is being corrected manually — kept on record for audit and shown against the entry.'),
         ])->columns(2);
     }
 

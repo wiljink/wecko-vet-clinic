@@ -44,34 +44,49 @@ class ConsultationResource extends Resource
                             $set('weight', $p->weight);
                         }
                     })
-                    ->default(fn () => Appointment::find(request()->integer('appointment'))?->patient_id),
+                    ->default(fn () => Appointment::find(request()->integer('appointment'))?->patient_id)
+                    ->helperText('Only active patients are listed; picking one auto-fills the client and last recorded weight.'),
                 Forms\Components\Hidden::make('client_id')
                     ->default(fn () => Appointment::find(request()->integer('appointment'))?->client_id),
                 Forms\Components\Select::make('provider_id')->label('Provider')
                     ->relationship('provider', 'name', fn (\Illuminate\Database\Eloquent\Builder $query) => $query->where('is_provider', true))
                     ->searchable()->preload()
-                    ->default(fn () => Appointment::find(request()->integer('appointment'))?->provider_id ?? Auth::id()),
+                    ->default(fn () => Appointment::find(request()->integer('appointment'))?->provider_id ?? Auth::id())
+                    ->helperText('The vet or staff member conducting this consultation; defaults to whoever is logged in.'),
                 Forms\Components\Select::make('location_id')->relationship('location', 'name')->searchable()->preload()
-                    ->default(fn () => Appointment::find(request()->integer('appointment'))?->location_id),
-                Forms\Components\DateTimePicker::make('consult_date')->default(now())->seconds(false)->required(),
+                    ->default(fn () => Appointment::find(request()->integer('appointment'))?->location_id)
+                    ->helperText('Clinic branch where the consultation is taking place.'),
+                Forms\Components\DateTimePicker::make('consult_date')->default(now())->seconds(false)->required()
+                    ->helperText('When the consultation occurred; used to order the patient\'s medical history.'),
                 Forms\Components\Select::make('appointment_reason_id')->label('Reason')
                     ->relationship('reason', 'reason')->searchable()->preload()
-                    ->default(fn () => Appointment::find(request()->integer('appointment'))?->appointment_reason_id),
+                    ->default(fn () => Appointment::find(request()->integer('appointment'))?->appointment_reason_id)
+                    ->helperText('Why the patient was brought in; used for reporting and to match standard consult templates.'),
                 Forms\Components\Hidden::make('appointment_id')
                     ->default(fn () => request()->integer('appointment') ?: null),
-                Forms\Components\TextInput::make('weight')->numeric()->suffix('kg'),
-                Forms\Components\TextInput::make('temperature')->numeric()->suffix('°C'),
+                Forms\Components\TextInput::make('weight')->numeric()->suffix('kg')
+                    ->helperText('Current weight in kilograms; saved to the patient record and used to calculate drug dosages.'),
+                Forms\Components\TextInput::make('temperature')->numeric()->suffix('°C')
+                    ->helperText('Body temperature at time of exam, kept in the patient\'s vital signs history.'),
             ]),
 
             Forms\Components\Section::make('Notes')->columns(2)->collapsible()->schema([
-                Forms\Components\Textarea::make('history')->rows(3),
-                Forms\Components\Textarea::make('examination')->rows(3),
-                Forms\Components\Textarea::make('tests')->rows(2),
-                Forms\Components\Textarea::make('comment')->rows(2),
-                Forms\Components\Textarea::make('differential_diagnosis')->rows(2),
-                Forms\Components\Textarea::make('consult_diagnosis')->rows(2),
-                Forms\Components\Textarea::make('treatment')->rows(2)->columnSpanFull(),
-                Forms\Components\Textarea::make('home_care_notes')->rows(2)->columnSpanFull(),
+                Forms\Components\Textarea::make('history')->rows(3)
+                    ->helperText('Subjective — the owner\'s account of symptoms and history leading up to this visit.'),
+                Forms\Components\Textarea::make('examination')->rows(3)
+                    ->helperText('Objective — findings observed during the physical examination.'),
+                Forms\Components\Textarea::make('tests')->rows(2)
+                    ->helperText('Diagnostic tests performed or ordered, and their results.'),
+                Forms\Components\Textarea::make('comment')->rows(2)
+                    ->helperText('Any other remarks about this visit not captured in the fields above.'),
+                Forms\Components\Textarea::make('differential_diagnosis')->rows(2)
+                    ->helperText('Other possible diagnoses considered before settling on the diagnosis below.'),
+                Forms\Components\Textarea::make('consult_diagnosis')->rows(2)
+                    ->helperText('Assessment — the diagnosis confirmed for this consultation.'),
+                Forms\Components\Textarea::make('treatment')->rows(2)->columnSpanFull()
+                    ->helperText('Plan — the treatment plan for this diagnosis, separate from the itemized items below.'),
+                Forms\Components\Textarea::make('home_care_notes')->rows(2)->columnSpanFull()
+                    ->helperText('At-home care instructions to relay to the owner after this visit.'),
             ]),
 
             Forms\Components\Section::make('Treatment items')->schema([
@@ -80,7 +95,8 @@ class ConsultationResource extends Resource
                         ->label('Apply standard consult')->icon('heroicon-m-square-3-stack-3d')
                         ->form([
                             Forms\Components\Select::make('standard_consult_id')->label('Standard consult')->required()
-                                ->options(StandardConsult::where('is_active', true)->pluck('name', 'id')),
+                                ->options(StandardConsult::where('is_active', true)->pluck('name', 'id'))
+                                ->helperText('Pick a saved template to instantly add its usual services, drugs and vaccines to the list below.'),
                         ])
                         ->action(function (array $data, Forms\Set $set, Forms\Get $get) {
                             $std = StandardConsult::with('items.product')->find($data['standard_consult_id']);
@@ -96,7 +112,8 @@ class ConsultationResource extends Resource
                     ->schema([
                         Forms\Components\Select::make('kind')->options([
                             'service' => 'Service', 'drug' => 'Drug', 'vaccination' => 'Vaccination', 'misc' => 'Misc',
-                        ])->required()->live()->default('service'),
+                        ])->required()->live()->default('service')
+                            ->helperText('What this line is; determines which product list and pricing fields appear below.'),
                         Forms\Components\Select::make('product_id')->label('Item')
                             ->options(fn (Forms\Get $get) => Product::query()
                                 ->when($get('kind') === 'service', fn ($q) => $q->where('kind', 'service'))
@@ -113,21 +130,31 @@ class ConsultationResource extends Resource
                                 foreach ($line as $k => $v) {
                                     $set($k, $v);
                                 }
-                            }),
-                        Forms\Components\TextInput::make('description')->required(),
-                        Forms\Components\TextInput::make('qty')->numeric()->default(1)->required()->live(onBlur: true),
-                        Forms\Components\TextInput::make('unit_price_ex_tax')->label('Unit price (ex tax)')->numeric()->prefix('₱')->required(),
-                        Forms\Components\TextInput::make('discount_pct')->label('Disc %')->numeric()->default(0),
-                        Forms\Components\TextInput::make('tax_rate')->label('Tax %')->numeric()->default(12),
+                            })
+                            ->helperText('The specific service, drug or vaccine dispensed; selecting one fills in the price and tax below.'),
+                        Forms\Components\TextInput::make('description')->required()
+                            ->helperText('Text printed on the invoice line for this item.'),
+                        Forms\Components\TextInput::make('qty')->numeric()->default(1)->required()->live(onBlur: true)
+                            ->helperText('Quantity dispensed or performed; drives both the stock deduction and the line total.'),
+                        Forms\Components\TextInput::make('unit_price_ex_tax')->label('Unit price (ex tax)')->numeric()->prefix('₱')->required()
+                            ->helperText('Price per unit before tax; defaults from the product but can be overridden for this consult.'),
+                        Forms\Components\TextInput::make('discount_pct')->label('Disc %')->numeric()->default(0)
+                            ->helperText('Discount percentage applied to this line only, not the whole invoice.'),
+                        Forms\Components\TextInput::make('tax_rate')->label('Tax %')->numeric()->default(12)
+                            ->helperText('Tax percentage charged on this line; defaults from company settings.'),
                         Forms\Components\TextInput::make('dispensing_fee')->numeric()->prefix('₱')->default(0)
-                            ->visible(fn (Forms\Get $get) => $get('kind') === 'drug'),
+                            ->visible(fn (Forms\Get $get) => $get('kind') === 'drug')
+                            ->helperText('Pharmacy fee for preparing and dispensing this drug, added on top of its price.'),
                         Forms\Components\TextInput::make('injection_fee')->numeric()->prefix('₱')->default(0)
-                            ->visible(fn (Forms\Get $get) => $get('kind') === 'vaccination'),
+                            ->visible(fn (Forms\Get $get) => $get('kind') === 'vaccination')
+                            ->helperText('Fee charged for administering this vaccine by injection.'),
                         Forms\Components\Select::make('regime_id')->label('Regime')
                             ->relationship('regime', 'name')->searchable()->preload()
-                            ->visible(fn (Forms\Get $get) => $get('kind') === 'drug'),
+                            ->visible(fn (Forms\Get $get) => $get('kind') === 'drug')
+                            ->helperText('Dosing regime used to print the correct dosage and frequency on the drug label.'),
                         Forms\Components\TextInput::make('drug_regime')->label('Directions')
-                            ->visible(fn (Forms\Get $get) => $get('kind') === 'drug'),
+                            ->visible(fn (Forms\Get $get) => $get('kind') === 'drug')
+                            ->helperText('Directions for the owner (dose, frequency, duration) printed on the dispensing label.'),
                     ])->columns(4)->addActionLabel('Add item')->defaultItems(0)
                     ->disabled(fn (?Consultation $record) => $record?->isFinalized() && ! Auth::user()->can('reopen_consultation')),
             ]),

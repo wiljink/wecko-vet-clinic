@@ -20,13 +20,16 @@ class AttachmentsRelationManager extends RelationManager
     public function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Select::make('type')->options(Attachment::TYPES)->required()->default('doc'),
-            Forms\Components\TextInput::make('title'),
+            Forms\Components\Select::make('type')->options(Attachment::TYPES)->required()->default('doc')
+                ->helperText('Categorise the file so X-rays, lab results and photos are easy to find later.'),
+            Forms\Components\TextInput::make('title')
+                ->helperText('Short label shown in the file list, e.g. "Hip X-ray" or "Blood panel 12/03".'),
             Forms\Components\FileUpload::make('path')
                 ->directory('patient-files')->downloadable()->openable()
                 ->acceptedFileTypes(['image/*', 'application/pdf', 'video/mp4'])
                 ->helperText('Photo, PDF, X-ray, video…'),
-            Forms\Components\Textarea::make('body')->label('Notes / chart description')->rows(4)->columnSpanFull(),
+            Forms\Components\Textarea::make('body')->label('Notes / chart description')->rows(4)->columnSpanFull()
+                ->helperText('Free-text notes describing the file\'s contents or context.'),
         ]);
     }
 

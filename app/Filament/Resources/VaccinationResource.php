@@ -28,16 +28,24 @@ class VaccinationResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Select::make('patient_id')->relationship('patient', 'name')->searchable()->required(),
+            Forms\Components\Select::make('patient_id')->relationship('patient', 'name')->searchable()->required()
+                ->helperText('The patient being vaccinated — also determines the owner shown on the certificate.'),
             Forms\Components\Select::make('product_id')->label('Vaccine')
                 ->relationship('product', 'name', fn (\Illuminate\Database\Eloquent\Builder $query) => $query->where('kind', 'vaccine'))
-                ->searchable(),
-            Forms\Components\TextInput::make('name')->required(),
-            Forms\Components\TextInput::make('batch_no'),
-            Forms\Components\DatePicker::make('given_on')->default(now())->required(),
-            Forms\Components\Select::make('provider_id')->relationship('provider', 'name')->searchable(),
-            Forms\Components\DatePicker::make('booster_due_on'),
-            Forms\Components\Textarea::make('protection')->columnSpanFull(),
+                ->searchable()
+                ->helperText('Links to the stock item used, if the vaccine is tracked through inventory.'),
+            Forms\Components\TextInput::make('name')->required()
+                ->helperText('Vaccine name as it will appear on the printed certificate.'),
+            Forms\Components\TextInput::make('batch_no')
+                ->helperText('Manufacturer batch/lot number — needed for traceability if a batch is recalled.'),
+            Forms\Components\DatePicker::make('given_on')->default(now())->required()
+                ->helperText('Date the vaccine was administered.'),
+            Forms\Components\Select::make('provider_id')->relationship('provider', 'name')->searchable()
+                ->helperText('Manufacturer or supplier of the vaccine, for traceability.'),
+            Forms\Components\DatePicker::make('booster_due_on')
+                ->helperText('Drives the vaccination reminder — leave blank if no booster is required.'),
+            Forms\Components\Textarea::make('protection')->columnSpanFull()
+                ->helperText('Diseases covered by this vaccination, for the client\'s record.'),
         ])->columns(2);
     }
 

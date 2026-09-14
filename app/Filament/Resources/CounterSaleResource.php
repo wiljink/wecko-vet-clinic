@@ -34,24 +34,31 @@ class CounterSaleResource extends Resource
     {
         return $form->schema([
             Forms\Components\Section::make()->columns(3)->schema([
-                Forms\Components\Toggle::make('walk_in')->label('Walk-in customer')->default(true)->live(),
+                Forms\Components\Toggle::make('walk_in')->label('Walk-in customer')->default(true)->live()
+                    ->helperText('Uncheck to charge this sale to an existing client account instead of a one-off customer.'),
                 Forms\Components\TextInput::make('walk_in_name')->label('Customer name')
-                    ->visible(fn (Forms\Get $get) => $get('walk_in')),
+                    ->visible(fn (Forms\Get $get) => $get('walk_in'))
+                    ->helperText('Printed on the receipt; no client record is created.'),
                 Forms\Components\Select::make('client_id')->label('Client')
                     ->relationship('client', 'surname')
                     ->getOptionLabelFromRecordUsing(fn (Client $c) => $c->full_name)
                     ->searchable(['surname', 'given_name'])->preload()
                     ->visible(fn (Forms\Get $get) => ! $get('walk_in'))
-                    ->required(fn (Forms\Get $get) => ! $get('walk_in')),
-                Forms\Components\Select::make('provider_id')->relationship('provider', 'name')->searchable()->default(auth()->id()),
-                Forms\Components\Select::make('location_id')->relationship('location', 'name')->searchable(),
-                Forms\Components\DatePicker::make('sale_date')->default(now())->required(),
+                    ->required(fn (Forms\Get $get) => ! $get('walk_in'))
+                    ->helperText('The account this sale can be closed on account against.'),
+                Forms\Components\Select::make('provider_id')->relationship('provider', 'name')->searchable()->default(auth()->id())
+                    ->helperText('Staff member credited with this sale on commission and sales reports.'),
+                Forms\Components\Select::make('location_id')->relationship('location', 'name')->searchable()
+                    ->helperText('Branch or room the sale is recorded against for stock and reporting purposes.'),
+                Forms\Components\DatePicker::make('sale_date')->default(now())->required()
+                    ->helperText('Date the sale is recorded under; affects which reporting period it falls into.'),
             ]),
             Forms\Components\Repeater::make('items')->relationship()->columnSpanFull()
                 ->disabled(fn (?CounterSale $record) => $record?->isCompleted())
                 ->schema([
                     Forms\Components\Select::make('kind')->options(['product' => 'Stock item', 'misc' => 'Misc'])
-                        ->default('product')->required()->live(),
+                        ->default('product')->required()->live()
+                        ->helperText('Stock item deducts from inventory; Misc is a free-text charge with no stock effect.'),
                     Forms\Components\Select::make('product_id')->label('Product')
                         ->options(fn () => Product::sellable('otc')->orderBy('name')->pluck('name', 'id'))
                         ->searchable()->live()->visible(fn (Forms\Get $get) => $get('kind') === 'product')
@@ -63,15 +70,23 @@ class CounterSaleResource extends Resource
                                 $set('dispensing_fee', $p->dispense_fee_always ? $p->dispense_fee : 0);
                                 $set('regime_id', $p->regime_id);
                             }
-                        }),
-                    Forms\Components\TextInput::make('description')->required(),
-                    Forms\Components\TextInput::make('qty')->numeric()->default(1)->required(),
-                    Forms\Components\TextInput::make('unit_price_ex_tax')->label('Unit (ex tax)')->numeric()->prefix('₱')->required(),
-                    Forms\Components\TextInput::make('discount_pct')->label('Disc %')->numeric()->default(0),
-                    Forms\Components\TextInput::make('tax_rate')->label('Tax %')->numeric()->default(12),
-                    Forms\Components\TextInput::make('dispensing_fee')->numeric()->prefix('₱')->default(0),
+                        })
+                        ->helperText('Selecting a product fills in its price, tax and dispensing fee below.'),
+                    Forms\Components\TextInput::make('description')->required()
+                        ->helperText('Line description printed on the receipt and invoice.'),
+                    Forms\Components\TextInput::make('qty')->numeric()->default(1)->required()
+                        ->helperText('Quantity sold; stock items are deducted from inventory by this amount.'),
+                    Forms\Components\TextInput::make('unit_price_ex_tax')->label('Unit (ex tax)')->numeric()->prefix('₱')->required()
+                        ->helperText('Price per unit before tax is added.'),
+                    Forms\Components\TextInput::make('discount_pct')->label('Disc %')->numeric()->default(0)
+                        ->helperText('Percentage knocked off this line before tax is calculated.'),
+                    Forms\Components\TextInput::make('tax_rate')->label('Tax %')->numeric()->default(12)
+                        ->helperText('VAT rate applied to this line; override for VAT-exempt items.'),
+                    Forms\Components\TextInput::make('dispensing_fee')->numeric()->prefix('₱')->default(0)
+                        ->helperText('Added on top of the item price when medication is dispensed.'),
                     Forms\Components\Select::make('regime_id')->label('Regime')->relationship('regime', 'name')
-                        ->searchable()->preload()->visible(fn (Forms\Get $get) => $get('kind') === 'product'),
+                        ->searchable()->preload()->visible(fn (Forms\Get $get) => $get('kind') === 'product')
+                        ->helperText('Treatment regime this dispensed item belongs to, for medical record grouping.'),
                 ])->columns(4)->addActionLabel('Add item')->defaultItems(1),
         ]);
     }
@@ -98,6 +113,9 @@ class CounterSaleResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make()->visible(fn (CounterSale $r) => ! $r->isCompleted()),
+                Tables\Actions\Action::make('receipt')->label('Receipt')->icon('heroicon-m-receipt-percent')->color('gray')
+                    ->visible(fn (CounterSale $r) => $r->isCompleted())
+                    ->url(fn (CounterSale $r) => route('counter-sales.receipt', $r), shouldOpenInNewTab: true),
                 Tables\Actions\Action::make('makePayment')
                     ->label('Make payment')->icon('heroicon-m-banknotes')->color('success')
                     ->visible(fn (CounterSale $r) => ! $r->isCompleted() && $r->items()->exists())

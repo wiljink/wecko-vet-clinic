@@ -26,13 +26,18 @@ class PatientReminderTypeResource extends Resource
     protected static function referenceFormFields(): array
     {
         return [
-            Forms\Components\TextInput::make('name')->required()->maxLength(255),
+            Forms\Components\TextInput::make('name')->required()->maxLength(255)
+                ->helperText('Reminder type offered on a patient record, e.g. Annual Vaccination or Heartworm Prevention.'),
             Forms\Components\Select::make('category')->required()->default('other')
-                ->options(['vaccination' => 'Vaccination', 'desexing' => 'Desexing', 'other' => 'Other']),
+                ->options(['vaccination' => 'Vaccination', 'desexing' => 'Desexing', 'other' => 'Other'])
+                ->helperText('Groups this reminder for filtering and reporting purposes.'),
             Forms\Components\Fieldset::make('Interval until next due')->schema([
-                Forms\Components\TextInput::make('period_years')->numeric()->default(0)->required(),
-                Forms\Components\TextInput::make('period_months')->numeric()->default(0)->required(),
-                Forms\Components\TextInput::make('period_days')->numeric()->default(0)->required(),
+                Forms\Components\TextInput::make('period_years')->numeric()->default(0)->required()
+                    ->helperText('Years to add when calculating this reminder\'s next due date.'),
+                Forms\Components\TextInput::make('period_months')->numeric()->default(0)->required()
+                    ->helperText('Months to add when calculating this reminder\'s next due date.'),
+                Forms\Components\TextInput::make('period_days')->numeric()->default(0)->required()
+                    ->helperText('Days to add when calculating this reminder\'s next due date.'),
             ])->columns(3),
         ];
     }

@@ -26,8 +26,10 @@ class StateResource extends Resource
     protected static function referenceFormFields(): array
     {
         return [
-            Forms\Components\TextInput::make('name')->required()->maxLength(255),
-            Forms\Components\TextInput::make('code')->maxLength(10),
+            Forms\Components\TextInput::make('name')->required()->maxLength(255)
+                ->helperText('State/province name available when entering a client or suburb address.'),
+            Forms\Components\TextInput::make('code')->maxLength(10)
+                ->helperText('Short abbreviation used on printed addresses and labels.'),
         ];
     }
 

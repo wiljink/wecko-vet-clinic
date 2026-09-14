@@ -33,16 +33,21 @@ class PaymentResource extends Resource
             Forms\Components\Select::make('client_id')->label('Client')->required()
                 ->relationship('client', 'surname')
                 ->getOptionLabelFromRecordUsing(fn (Client $c) => $c->full_name.' — balance ₱'.number_format($c->currentBalance(), 2))
-                ->searchable(['surname', 'given_name'])->preload()->live(),
+                ->searchable(['surname', 'given_name'])->preload()->live()
+                ->helperText('Whose account this payment is received from and applied against.'),
             Forms\Components\Select::make('payment_type')->required()->default('cash')
-                ->options(Payment::TYPES)->live(),
-            Forms\Components\TextInput::make('amount')->numeric()->prefix('₱')->required()->live(onBlur: true),
+                ->options(Payment::TYPES)->live()
+                ->helperText('How the money was received — determines which fields below apply and which banking total it feeds into.'),
+            Forms\Components\TextInput::make('amount')->numeric()->prefix('₱')->required()->live(onBlur: true)
+                ->helperText('Total amount received, before any change is given back.'),
             Forms\Components\TextInput::make('cash_received')->numeric()->prefix('₱')
                 ->visible(fn (Forms\Get $get) => $get('payment_type') === 'cash')
                 ->helperText('Change is worked out automatically.'),
             Forms\Components\Select::make('card_type_id')->relationship('cardType', 'name')
-                ->visible(fn (Forms\Get $get) => in_array($get('payment_type'), ['credit_card', 'eftpos'])),
-            Forms\Components\TextInput::make('reference'),
+                ->visible(fn (Forms\Get $get) => in_array($get('payment_type'), ['credit_card', 'eftpos']))
+                ->helperText('Which card network was charged, for reconciling against the processor statement.'),
+            Forms\Components\TextInput::make('reference')
+                ->helperText('Cheque number, transaction ID, or other reference to trace this payment later.'),
             Forms\Components\Toggle::make('is_refund')->helperText('Money out — reduces the account credit.'),
             Forms\Components\CheckboxList::make('apply_to')->label('Apply to invoices')
                 ->options(fn (Forms\Get $get) => $get('client_id')
@@ -50,7 +55,8 @@ class PaymentResource extends Resource
                         ->mapWithKeys(fn (Invoice $i) => [$i->id => "{$i->invoice_no} — ₱".number_format((float) $i->balance, 2).' outstanding'])
                     : [])
                 ->visible(fn (Forms\Get $get) => $get('payment_type') !== 'advance_payment' && filled($get('client_id')))
-                ->columns(1)->dehydrated(),
+                ->columns(1)->dehydrated()
+                ->helperText('Which outstanding invoices to settle with this payment — any amount left over stays as unapplied credit on the account.'),
         ])->columns(2);
     }
 

@@ -26,9 +26,12 @@ class NationalHolidayResource extends Resource
     protected static function referenceFormFields(): array
     {
         return [
-            Forms\Components\TextInput::make('name')->required()->maxLength(255),
-            Forms\Components\DatePicker::make('holiday_date')->required(),
-            Forms\Components\TextInput::make('description')->maxLength(255),
+            Forms\Components\TextInput::make('name')->required()->maxLength(255)
+                ->helperText('Name of the public holiday, shown on the appointment calendar and staff roster.'),
+            Forms\Components\DatePicker::make('holiday_date')->required()
+                ->helperText('Date the clinic observes this holiday — used to flag the day as non-working when scheduling.'),
+            Forms\Components\TextInput::make('description')->maxLength(255)
+                ->helperText('Optional note about the holiday, shown when hovering over it on the calendar.'),
         ];
     }
 

@@ -26,9 +26,12 @@ class AppointmentStatusResource extends Resource
     protected static function referenceFormFields(): array
     {
         return [
-            Forms\Components\TextInput::make('name')->required()->maxLength(255),
-            Forms\Components\TextInput::make('menu_caption')->maxLength(255),
-            Forms\Components\ColorPicker::make('color')->required()->default('#64748b'),
+            Forms\Components\TextInput::make('name')->required()->maxLength(255)
+                ->helperText('Status shown against an appointment as it progresses, e.g. Confirmed, Arrived, Completed.'),
+            Forms\Components\TextInput::make('menu_caption')->maxLength(255)
+                ->helperText('Shorter text shown on the calendar grid when space is tight.'),
+            Forms\Components\ColorPicker::make('color')->required()->default('#64748b')
+                ->helperText('Colour used to visually distinguish appointments in this status on the calendar.'),
             Forms\Components\Toggle::make('is_default')->helperText('Applied to new appointments.'),
         ];
     }

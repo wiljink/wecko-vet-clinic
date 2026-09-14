@@ -26,7 +26,8 @@ class CardTypeResource extends Resource
     protected static function referenceFormFields(): array
     {
         return [
-            Forms\Components\TextInput::make('name')->required()->maxLength(255),
+            Forms\Components\TextInput::make('name')->required()->maxLength(255)
+                ->helperText('Payment or card method offered at checkout, e.g. Visa, GCash, Cash.'),
         ];
     }
 

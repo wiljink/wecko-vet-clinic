@@ -41,8 +41,9 @@
         </tbody>
     </table>
 
+    @php($agingLabels = \App\Support\ClientLedger::agingLabels())
     <table class="aging" style="width:60%; margin-top:20px;">
-        <thead><tr><th>Current</th><th>1 period</th><th>2 periods</th><th>3+ periods</th><th>Total</th></tr></thead>
+        <thead><tr><th>{{ $agingLabels['current'] }}</th><th>{{ $agingLabels['b1'] }}</th><th>{{ $agingLabels['b2'] }}</th><th>{{ $agingLabels['b3'] }}</th><th>Total</th></tr></thead>
         <tbody><tr>
             <td>₱{{ number_format($aging['current'], 2) }}</td>
             <td>₱{{ number_format($aging['b1'], 2) }}</td>

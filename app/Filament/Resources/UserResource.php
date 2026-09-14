@@ -32,21 +32,29 @@ class UserResource extends Resource
     {
         return $form->schema([
             Forms\Components\Section::make()->columns(2)->schema([
-                Forms\Components\TextInput::make('name')->required(),
-                Forms\Components\TextInput::make('email')->email()->required()->unique(ignoreRecord: true),
+                Forms\Components\TextInput::make('name')->required()
+                    ->helperText('Shown throughout the system on schedules, audit logs and printed documents.'),
+                Forms\Components\TextInput::make('email')->email()->required()->unique(ignoreRecord: true)
+                    ->helperText('Used to log in and to receive password reset emails.'),
                 Forms\Components\TextInput::make('password')->password()->revealable()
                     ->dehydrateStateUsing(fn ($state) => filled($state) ? Hash::make($state) : null)
                     ->dehydrated(fn ($state) => filled($state))
-                    ->required(fn (string $operation) => $operation === 'create'),
-                Forms\Components\Select::make('job_position_id')->relationship('jobPosition', 'name')->searchable()->preload(),
-                Forms\Components\TextInput::make('licence_no')->label('PRC licence #'),
+                    ->required(fn (string $operation) => $operation === 'create')
+                    ->helperText('Leave blank when editing an existing user to keep their current password.'),
+                Forms\Components\Select::make('job_position_id')->relationship('jobPosition', 'name')->searchable()->preload()
+                    ->helperText('Job title shown on staff lists and schedules; does not by itself grant any access.'),
+                Forms\Components\TextInput::make('licence_no')->label('PRC licence #')
+                    ->helperText('Printed on prescriptions and certificates signed by this user.'),
                 Forms\Components\Select::make('roles')->multiple()->relationship('roles', 'name')->preload()
                     ->helperText('Security level. "principal" has full access to everything.'),
             ]),
             Forms\Components\Section::make('Access')->columns(3)->schema([
-                Forms\Components\Toggle::make('is_provider')->label('Is a provider (vet / nurse who attends patients)'),
-                Forms\Components\Toggle::make('can_login')->label('Allowed to log in')->default(true),
-                Forms\Components\Toggle::make('is_principal')->label('Principal / practice owner'),
+                Forms\Components\Toggle::make('is_provider')->label('Is a provider (vet / nurse who attends patients)')
+                    ->helperText('Allows this user to be assigned as the attending vet or nurse on appointments and consultations.'),
+                Forms\Components\Toggle::make('can_login')->label('Allowed to log in')->default(true)
+                    ->helperText('Uncheck to block this account from signing in without deleting their record.'),
+                Forms\Components\Toggle::make('is_principal')->label('Principal / practice owner')
+                    ->helperText('Grants unrestricted access to every module and cannot be blocked or deleted.'),
             ]),
         ]);
     }

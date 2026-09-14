@@ -26,7 +26,8 @@ class TitleResource extends Resource
     protected static function referenceFormFields(): array
     {
         return [
-            Forms\Components\TextInput::make('name')->required()->maxLength(255),
+            Forms\Components\TextInput::make('name')->required()->maxLength(255)
+                ->helperText('Honorific option offered on a client\'s name, e.g. Mr, Mrs, Dr.'),
         ];
     }
 

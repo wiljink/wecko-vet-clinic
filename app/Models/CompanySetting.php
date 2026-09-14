@@ -15,6 +15,8 @@ class CompanySetting extends Model
         'default_injection_fee' => 'decimal:2',
         'show_reminders_on_login' => 'boolean',
         'auto_generate_product_code' => 'boolean',
+        'auto_generate_barcode' => 'boolean',
+        'pos_print_receipt' => 'boolean',
         'display_patients_per_client' => 'boolean',
         'open_discounting' => 'boolean',
     ];

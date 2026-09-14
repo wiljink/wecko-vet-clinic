@@ -34,23 +34,30 @@ class StandardConsultResource extends Resource
     {
         return $form->schema([
             Forms\Components\Grid::make(3)->schema([
-                Forms\Components\TextInput::make('name')->required(),
+                Forms\Components\TextInput::make('name')->required()
+                    ->helperText('Name staff will see when picking this template from "Apply standard consult".'),
                 Forms\Components\Select::make('appointment_reason_id')->label('For reason')
-                    ->relationship('reason', 'reason')->searchable()->preload(),
-                Forms\Components\Toggle::make('is_active')->default(true),
+                    ->relationship('reason', 'reason')->searchable()->preload()
+                    ->helperText('Optional — links this template to a specific visit reason for easier lookup.'),
+                Forms\Components\Toggle::make('is_active')->default(true)
+                    ->helperText('Inactive templates no longer appear in the "Apply standard consult" picker.'),
             ]),
-            Forms\Components\Textarea::make('notes'),
+            Forms\Components\Textarea::make('notes')
+                ->helperText('Internal notes on when to use this template; not shown to clients.'),
             Forms\Components\Repeater::make('items')->relationship()->schema([
                 Forms\Components\Select::make('kind')->options([
                     'service' => 'Service', 'drug' => 'Drug', 'vaccination' => 'Vaccination',
-                ])->default('service')->required()->live(),
+                ])->default('service')->required()->live()
+                    ->helperText('What this item is; determines which product list is offered below.'),
                 Forms\Components\Select::make('product_id')->label('Item')->required()->searchable()
                     ->options(fn (Forms\Get $get) => Product::query()
                         ->when($get('kind') === 'service', fn ($q) => $q->where('kind', 'service'))
                         ->when($get('kind') === 'drug', fn ($q) => $q->where('kind', 'product'))
                         ->when($get('kind') === 'vaccination', fn ($q) => $q->where('kind', 'vaccine'))
-                        ->orderBy('name')->pluck('name', 'id')),
-                Forms\Components\TextInput::make('qty')->numeric()->default(1)->required(),
+                        ->orderBy('name')->pluck('name', 'id'))
+                    ->helperText('The specific service, drug or vaccine to add whenever this template is applied.'),
+                Forms\Components\TextInput::make('qty')->numeric()->default(1)->required()
+                    ->helperText('Default quantity added to the consult when this template is applied.'),
             ])->columns(3)->addActionLabel('Add item'),
         ]);
     }

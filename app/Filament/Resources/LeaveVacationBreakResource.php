@@ -27,12 +27,17 @@ class LeaveVacationBreakResource extends Resource
     {
         return [
             Forms\Components\Select::make('user_id')->label('Provider')->required()
-                ->relationship('user', 'name', fn (\Illuminate\Database\Eloquent\Builder $query) => $query->where('is_provider', true))->searchable()->preload(),
+                ->relationship('user', 'name', fn (\Illuminate\Database\Eloquent\Builder $query) => $query->where('is_provider', true))->searchable()->preload()
+                ->helperText('Staff member who will be unavailable during this period.'),
             Forms\Components\Select::make('type')->required()->default('leave')
-                ->options(['leave' => 'Leave', 'vacation' => 'Vacation', 'break' => 'Break']),
-            Forms\Components\DateTimePicker::make('starts_at')->required()->seconds(false),
-            Forms\Components\DateTimePicker::make('ends_at')->required()->seconds(false),
-            Forms\Components\Textarea::make('notes')->columnSpanFull(),
+                ->options(['leave' => 'Leave', 'vacation' => 'Vacation', 'break' => 'Break'])
+                ->helperText('How this absence is labelled on the calendar.'),
+            Forms\Components\DateTimePicker::make('starts_at')->required()->seconds(false)
+                ->helperText('When the provider becomes unavailable.'),
+            Forms\Components\DateTimePicker::make('ends_at')->required()->seconds(false)
+                ->helperText('When the provider becomes available again.'),
+            Forms\Components\Textarea::make('notes')->columnSpanFull()
+                ->helperText('Reason for the absence, e.g. annual leave, conference, sick leave.'),
         ];
     }
 

@@ -34,17 +34,21 @@ class MarketingCampaignResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\TextInput::make('name')->required()->columnSpanFull(),
+            Forms\Components\TextInput::make('name')->required()->columnSpanFull()
+                ->helperText('Internal name for this campaign; clients never see it.'),
             Forms\Components\CheckboxList::make('channels')->options([
                 'email' => 'Email', 'sms' => 'SMS', 'letter' => 'Letter',
-            ])->required()->columns(3),
+            ])->required()->columns(3)
+                ->helperText('Delivery methods to use — a client only receives it on a channel they have opted in to.'),
             Forms\Components\Select::make('document_template_id')->label('Template')
                 ->options(DocumentTemplate::where('type', 'marketing')->pluck('name', 'id'))
                 ->helperText('Create one under Document Templates (type "Marketing").'),
             Forms\Components\Fieldset::make('Audience filter')->schema([
-                Forms\Components\Toggle::make('filter.has_email')->label('Must have an email address'),
+                Forms\Components\Toggle::make('filter.has_email')->label('Must have an email address')
+                    ->helperText('Restricts the campaign to clients who have an email address on file.'),
                 Forms\Components\Select::make('filter.species_id')->label('Owns a patient of species')
-                    ->options(Species::pluck('name', 'id')),
+                    ->options(Species::pluck('name', 'id'))
+                    ->helperText('Restricts the campaign to clients who own at least one patient of this species.'),
             ])->columns(2),
         ]);
     }

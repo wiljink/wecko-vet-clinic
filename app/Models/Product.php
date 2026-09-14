@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use App\Models\Concerns\RecordsActivity;
+use App\Support\Barcode;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Product extends Model
 {
@@ -56,10 +58,22 @@ class Product extends Model
                 2,
             );
 
-            if (! $product->code && \App\Models\CompanySetting::current()->auto_generate_product_code) {
-                $product->code = strtoupper(\Illuminate\Support\Str::random(8));
+            $settings = CompanySetting::current();
+
+            if (! $product->code && $settings->auto_generate_product_code) {
+                $product->code = strtoupper(Str::random(8));
+            }
+
+            if (! $product->barcode && $product->tracksStock() && $settings->auto_generate_barcode) {
+                $product->barcode = Barcode::generate();
             }
         });
+    }
+
+    /** SVG barcode for this product, or null when it has no barcode. */
+    public function barcodeSvg(int $height = 50, bool $showText = true): ?string
+    {
+        return $this->barcode ? Barcode::svg($this->barcode, $height, 1.4, $showText) : null;
     }
 
     public function group(): BelongsTo
@@ -123,6 +137,14 @@ class Product extends Model
         // $channel: 'consult' or 'otc'
         return $query->where('is_active', true)
             ->whereIn('list_this_product', ['both', $channel]);
+    }
+
+    /** Resolve a scanned barcode or typed product code to a product. */
+    public function scopeScan(Builder $query, string $term): Builder
+    {
+        $term = trim($term);
+
+        return $query->where(fn (Builder $q) => $q->where('barcode', $term)->orWhere('code', $term));
     }
 
     public function scopeBelowReorder(Builder $query): Builder

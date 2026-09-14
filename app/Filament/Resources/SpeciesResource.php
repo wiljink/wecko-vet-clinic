@@ -26,8 +26,10 @@ class SpeciesResource extends Resource
     protected static function referenceFormFields(): array
     {
         return [
-            Forms\Components\TextInput::make('name')->required()->maxLength(255),
-            Forms\Components\Select::make('size')->options(['Small Animal' => 'Small Animal', 'Large Animal' => 'Large Animal', 'Small and Large Animal' => 'Small and Large Animal']),
+            Forms\Components\TextInput::make('name')->required()->maxLength(255)
+                ->helperText('Species option offered when registering a patient, e.g. Canine, Feline.'),
+            Forms\Components\Select::make('size')->options(['Small Animal' => 'Small Animal', 'Large Animal' => 'Large Animal', 'Small and Large Animal' => 'Small and Large Animal'])
+                ->helperText('Size classification used for dosing guidance and consult fee calculations.'),
         ];
     }
 

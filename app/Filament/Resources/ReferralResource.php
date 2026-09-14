@@ -26,7 +26,8 @@ class ReferralResource extends Resource
     protected static function referenceFormFields(): array
     {
         return [
-            Forms\Components\TextInput::make('name')->required()->maxLength(255),
+            Forms\Components\TextInput::make('name')->required()->maxLength(255)
+                ->helperText('Source option offered in a client\'s "Referred by" field, e.g. Google, Vet Colleague, Walk-in.'),
         ];
     }
 

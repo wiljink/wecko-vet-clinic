@@ -36,16 +36,22 @@ class InventoryOrderResource extends Resource
     {
         return $form->schema([
             Forms\Components\Section::make()->columns(3)->schema([
-                Forms\Components\TextInput::make('order_no')->disabled()->dehydrated(false)->placeholder('Auto'),
+                Forms\Components\TextInput::make('order_no')->disabled()->dehydrated(false)->placeholder('Auto')
+                    ->helperText('Assigned automatically once the order is saved.'),
                 Forms\Components\Select::make('supplier_id')->relationship('supplier', 'name')
-                    ->required()->searchable()->preload()->live(),
+                    ->required()->searchable()->preload()->live()
+                    ->helperText('Supplier this purchase order will be sent to; changing it filters the products below.'),
                 Forms\Components\Select::make('status')->options([
                     'draft' => 'Draft', 'placed' => 'Placed', 'partially_received' => 'Partially received',
                     'received' => 'Received', 'cancelled' => 'Cancelled',
-                ])->default('draft')->required(),
-                Forms\Components\DatePicker::make('order_date')->default(now())->required(),
-                Forms\Components\DatePicker::make('delivery_date'),
-                Forms\Components\TextInput::make('total_ex_tax')->prefix('₱')->disabled()->dehydrated(false),
+                ])->default('draft')->required()
+                    ->helperText('Tracks the order through its lifecycle; receipts against this order update it automatically.'),
+                Forms\Components\DatePicker::make('order_date')->default(now())->required()
+                    ->helperText('Date the order was placed with the supplier.'),
+                Forms\Components\DatePicker::make('delivery_date')
+                    ->helperText('Expected delivery date, for your own reference only.'),
+                Forms\Components\TextInput::make('total_ex_tax')->prefix('₱')->disabled()->dehydrated(false)
+                    ->helperText('Calculated automatically from the line items below.'),
             ]),
             Forms\Components\Repeater::make('items')->relationship()->columnSpanFull()
                 ->schema([
@@ -55,13 +61,16 @@ class InventoryOrderResource extends Resource
                             ->when($get('../../supplier_id'), fn ($q, $s) => $q->where('supplier_id', $s))
                             ->orderBy('name')->pluck('name', 'id'))
                         ->searchable()->live()
+                        ->helperText('Selecting a product fills in its current cost below; list is filtered to the chosen supplier.')
                         ->afterStateUpdated(function ($state, Forms\Set $set) {
                             if ($p = Product::find($state)) {
                                 $set('unit_cost_ex_tax', $p->unit_cost_ex_tax);
                             }
                         }),
-                    Forms\Components\TextInput::make('qty_ordered')->numeric()->required()->default(1),
-                    Forms\Components\TextInput::make('unit_cost_ex_tax')->numeric()->prefix('₱')->required()->default(0),
+                    Forms\Components\TextInput::make('qty_ordered')->numeric()->required()->default(1)
+                        ->helperText('Quantity being ordered from the supplier.'),
+                    Forms\Components\TextInput::make('unit_cost_ex_tax')->numeric()->prefix('₱')->required()->default(0)
+                        ->helperText('Cost per unit, excluding tax; defaults from the product but can be overridden for this order.'),
                     Forms\Components\Placeholder::make('received')
                         ->content(fn ($record) => $record?->qty_received ?? '0'),
                 ])->columns(4)->addActionLabel('Add line')->defaultItems(1),

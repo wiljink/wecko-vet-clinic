@@ -58,6 +58,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'post_stock_take', 'post_stock_receipt',
             'process_payment', 'process_refund', 'make_account_adjustment',
             'run_statements', 'run_reminders', 'run_marketing',
+            'import_data',
         ]);
 
         DB::transaction(function () use ($permissions) {
@@ -88,7 +89,7 @@ class RolesAndPermissionsSeeder extends Seeder
         })->orWhereIn('name', [
             'finalize_consultation', 'reopen_consultation', 'post_stock_take',
             'post_stock_receipt', 'process_payment', 'process_refund',
-            'make_account_adjustment', 'run_statements', 'run_reminders',
+            'make_account_adjustment', 'run_statements', 'run_reminders', 'import_data',
         ])->get());
 
         // Nurse: clinical support, no finalise, no financial adjustments.

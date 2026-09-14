@@ -34,19 +34,25 @@ class InventoryAdjustmentResource extends Resource
     {
         return $form->schema([
             Forms\Components\Section::make()->columns(3)->schema([
-                Forms\Components\TextInput::make('reference')->disabled()->dehydrated(false)->placeholder('Auto'),
-                Forms\Components\DatePicker::make('adjustment_date')->default(now())->required(),
+                Forms\Components\TextInput::make('reference')->disabled()->dehydrated(false)->placeholder('Auto')
+                    ->helperText('Assigned automatically once the adjustment is saved.'),
+                Forms\Components\DatePicker::make('adjustment_date')->default(now())->required()
+                    ->helperText('Date the correction is being recorded.'),
                 Forms\Components\Placeholder::make('status')->content(fn (?InventoryAdjustment $record) => ucfirst($record?->status ?? 'draft')),
-                Forms\Components\TextInput::make('remarks')->label('Reason for adjustment')->columnSpanFull(),
+                Forms\Components\TextInput::make('remarks')->label('Reason for adjustment')->columnSpanFull()
+                    ->helperText('Overall reason for this adjustment, e.g. damaged stock, theft, or count correction.'),
             ]),
             Forms\Components\Repeater::make('items')->relationship()->columnSpanFull()
                 ->disabled(fn (?InventoryAdjustment $record) => $record?->isPosted())
                 ->schema([
-                    Forms\Components\Select::make('product_id')->relationship('product', 'name')->required()->searchable(),
+                    Forms\Components\Select::make('product_id')->relationship('product', 'name')->required()->searchable()
+                        ->helperText('Product whose stock is being corrected.'),
                     Forms\Components\TextInput::make('qty_delta')->numeric()->required()
                         ->helperText('Positive to add stock, negative to remove.'),
-                    Forms\Components\DatePicker::make('use_by_on')->label('Use-by date'),
-                    Forms\Components\TextInput::make('reason'),
+                    Forms\Components\DatePicker::make('use_by_on')->label('Use-by date')
+                        ->helperText('Use-by date for stock being added, if applicable.'),
+                    Forms\Components\TextInput::make('reason')
+                        ->helperText('Reason for this specific line, if different from the overall reason above.'),
                 ])->columns(4)->addActionLabel('Add line')->defaultItems(1),
         ]);
     }

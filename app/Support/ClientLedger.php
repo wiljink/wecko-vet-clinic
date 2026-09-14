@@ -122,4 +122,22 @@ class ClientLedger
 
         return $buckets;
     }
+
+    /**
+     * Day-range labels for the {@see aging()} buckets, based on the configured
+     * accounting period width (e.g. "0-30 days", "31-60 days", "61-90 days", "90+ days").
+     *
+     * @return array{current: string, b1: string, b2: string, b3: string}
+     */
+    public static function agingLabels(): array
+    {
+        $width = CompanySetting::current()->accounting_period_days ?: 30;
+
+        return [
+            'current' => "0-{$width} days",
+            'b1' => ($width + 1).'-'.($width * 2).' days',
+            'b2' => ($width * 2 + 1).'-'.($width * 3).' days',
+            'b3' => ($width * 3).'+ days',
+        ];
+    }
 }

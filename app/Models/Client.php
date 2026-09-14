@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Client extends Model
 {
@@ -91,6 +92,25 @@ class Client extends Model
     public function appointments(): HasMany
     {
         return $this->hasMany(Appointment::class);
+    }
+
+    public function consultations(): HasMany
+    {
+        return $this->hasMany(Consultation::class);
+    }
+
+    /**
+     * Every prescription ever dispensed across all of this client's patients —
+     * lets a vet see the full medication history for the account in one place.
+     */
+    public function prescriptions(): HasManyThrough
+    {
+        return $this->hasManyThrough(Prescription::class, Patient::class);
+    }
+
+    public function vaccinations(): HasManyThrough
+    {
+        return $this->hasManyThrough(Vaccination::class, Patient::class);
     }
 
     public function primaryAddress(): ?ClientAddress

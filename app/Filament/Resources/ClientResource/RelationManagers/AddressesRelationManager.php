@@ -17,14 +17,22 @@ class AddressesRelationManager extends RelationManager
     public function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\TextInput::make('label')->placeholder('Home, Work, Farm'),
-            Forms\Components\Toggle::make('is_primary'),
-            Forms\Components\TextInput::make('line1')->label('Address line 1')->columnSpanFull(),
-            Forms\Components\TextInput::make('line2')->label('Address line 2')->columnSpanFull(),
-            Forms\Components\TextInput::make('suburb'),
-            Forms\Components\TextInput::make('postcode'),
-            Forms\Components\Select::make('state_id')->relationship('state', 'name')->searchable()->preload(),
-            Forms\Components\TextInput::make('street_directory_ref')->label('Street directory ref.'),
+            Forms\Components\TextInput::make('label')->placeholder('Home, Work, Farm')
+                ->helperText('Short tag to tell a client\'s multiple addresses apart.'),
+            Forms\Components\Toggle::make('is_primary')
+                ->helperText('The primary address is used by default on invoices, labels and reminders.'),
+            Forms\Components\TextInput::make('line1')->label('Address line 1')->columnSpanFull()
+                ->helperText('Street number and name.'),
+            Forms\Components\TextInput::make('line2')->label('Address line 2')->columnSpanFull()
+                ->helperText('Unit, building, or other additional address detail.'),
+            Forms\Components\TextInput::make('suburb')
+                ->helperText('Suburb or barangay.'),
+            Forms\Components\TextInput::make('postcode')
+                ->helperText('Postal / ZIP code.'),
+            Forms\Components\Select::make('state_id')->relationship('state', 'name')->searchable()->preload()
+                ->helperText('Province or state — used for postage and regional reporting.'),
+            Forms\Components\TextInput::make('street_directory_ref')->label('Street directory ref.')
+                ->helperText('Map reference for locating rural or hard-to-find properties.'),
             Forms\Components\TextInput::make('travel_distance')
                 ->helperText('For farm / large-animal call-outs.'),
         ])->columns(2);

@@ -59,42 +59,80 @@ class CompanySettingsPage extends Page implements HasForms
                     ->description('Printed on invoices, statements and certificates.')
                     ->schema([
                         Grid::make(2)->schema([
-                            TextInput::make('company_name')->required(),
-                            TextInput::make('tin')->label('TIN'),
-                            TextInput::make('email')->email(),
-                            TextInput::make('phone'),
-                            TextInput::make('fax'),
-                            TextInput::make('website')->url()->prefix('https://'),
+                            TextInput::make('company_name')->required()
+                                ->helperText('Printed as the clinic name on invoices, statements and certificates.'),
+                            TextInput::make('tin')->label('TIN')
+                                ->helperText('BIR Tax Identification Number printed on official receipts.'),
+                            TextInput::make('email')->email()
+                                ->helperText('Contact email shown on printed documents and client statements.'),
+                            TextInput::make('phone')
+                                ->helperText('Contact number shown on printed documents and client statements.'),
+                            TextInput::make('fax')
+                                ->helperText('Fax number shown on printed documents, if the clinic still uses one.'),
+                            TextInput::make('website')->url()->prefix('https://')
+                                ->helperText('Shown on printed documents and client-facing statements.'),
                         ]),
-                        Textarea::make('address')->rows(3),
+                        Textarea::make('address')->rows(3)
+                            ->helperText('Clinic address printed on invoices, statements and certificates.'),
                     ]),
 
                 Section::make('Country & Tax')->schema([
                     Grid::make(3)->schema([
-                        TextInput::make('country'),
-                        TextInput::make('currency_symbol')->required()->maxLength(4),
+                        TextInput::make('country')
+                            ->helperText('Used to format addresses and pick country-specific defaults.'),
+                        TextInput::make('currency_symbol')->required()->maxLength(4)
+                            ->helperText('Prefixes every peso amount shown or printed by the system.'),
                         TextInput::make('date_format')->helperText('PHP date() format, e.g. d/m/Y'),
-                        TextInput::make('tax_rate')->numeric()->required()->suffix('%'),
+                        TextInput::make('tax_rate')->numeric()->required()->suffix('%')
+                            ->helperText('Rate applied to taxable sales when calculating invoice totals.'),
                         TextInput::make('tax_label')->required()->helperText('e.g. VAT, GST'),
                         TextInput::make('accounting_period_days')->numeric()
                             ->helperText('Aging bucket width — 15 or 30 days'),
                     ]),
                     KeyValue::make('coin_denominations')
                         ->label('Cash denominations (Balance the Till)')
-                        ->keyLabel('#')->valueLabel('Denomination')->addable()->reorderable(),
+                        ->keyLabel('#')->valueLabel('Denomination')->addable()->reorderable()
+                        ->helperText('Denominations counted on the till-balancing sheet at end of day.'),
                 ]),
+
+                Section::make('Point of Sale & Receipts')
+                    ->description('Barcode symbology, the default tender and the text printed on sales receipts.')
+                    ->schema([
+                        Grid::make(3)->schema([
+                            Toggle::make('auto_generate_barcode')
+                                ->helperText('Assign an in-store barcode to new stock items automatically.'),
+                            TextInput::make('barcode_symbology')->default('C128')->disabled()
+                                ->helperText('Code 128 (fixed).'),
+                            \Filament\Forms\Components\Select::make('pos_default_payment_type')
+                                ->label('Default tender')
+                                ->options(['cash' => 'Cash', 'credit_card' => 'Credit card', 'eftpos' => 'EFTPOS', 'cheque' => 'Cheque'])
+                                ->default('cash')
+                                ->helperText('Pre-selected payment method on the counter sale screen; cashiers can change it per sale.'),
+                            Toggle::make('pos_print_receipt')->label('Offer receipt after each sale')->default(true)
+                                ->helperText('Prompt the cashier to print a receipt every time a counter sale is completed.'),
+                        ]),
+                        Textarea::make('receipt_header')->rows(2)->helperText('Printed under the clinic name, e.g. "VAT Reg. TIN 000-000-000".'),
+                        Textarea::make('receipt_footer')->rows(2)->helperText('Printed at the bottom, e.g. "Thank you — no refunds without receipt".'),
+                    ]),
 
                 Section::make('Operational Defaults')->schema([
                     Grid::make(3)->schema([
-                        Toggle::make('show_reminders_on_login'),
-                        Toggle::make('auto_generate_product_code'),
-                        Toggle::make('display_patients_per_client'),
+                        Toggle::make('show_reminders_on_login')
+                            ->helperText('Pop up due reminders on the dashboard as soon as a user logs in.'),
+                        Toggle::make('auto_generate_product_code')
+                            ->helperText('Assign a product code to new inventory items automatically instead of asking staff to key one in.'),
+                        Toggle::make('display_patients_per_client')
+                            ->helperText('Show each patient count on the client list.'),
                         Toggle::make('open_discounting')
                             ->helperText('Show a visible DISCOUNT line on invoices'),
-                        TextInput::make('reminder_days_window')->numeric()->suffix('days'),
-                        TextInput::make('default_desex_age_months')->numeric()->suffix('months'),
-                        TextInput::make('default_dispense_fee')->numeric()->prefix('₱'),
-                        TextInput::make('default_injection_fee')->numeric()->prefix('₱'),
+                        TextInput::make('reminder_days_window')->numeric()->suffix('days')
+                            ->helperText('How many days ahead reminders are pulled into the due list.'),
+                        TextInput::make('default_desex_age_months')->numeric()->suffix('months')
+                            ->helperText('Suggested age used when scheduling desexing reminders for new patients.'),
+                        TextInput::make('default_dispense_fee')->numeric()->prefix('₱')
+                            ->helperText('Default fee added when dispensing medication, editable per sale.'),
+                        TextInput::make('default_injection_fee')->numeric()->prefix('₱')
+                            ->helperText('Default fee added when administering an injection, editable per sale.'),
                     ]),
                 ]),
 
@@ -102,11 +140,16 @@ class CompanySettingsPage extends Page implements HasForms
                     ->description('Pre-filled into every new consultation; the vet edits as needed.')
                     ->collapsed()
                     ->schema([
-                        Textarea::make('default_history')->rows(2),
-                        Textarea::make('default_examination')->rows(3),
-                        Textarea::make('default_tests')->rows(2),
-                        Textarea::make('default_differential_diagnosis')->rows(2),
-                        Textarea::make('default_consult_diagnosis')->rows(2),
+                        Textarea::make('default_history')->rows(2)
+                            ->helperText('Pre-fills the History field on every new consultation.'),
+                        Textarea::make('default_examination')->rows(3)
+                            ->helperText('Pre-fills the Examination field on every new consultation.'),
+                        Textarea::make('default_tests')->rows(2)
+                            ->helperText('Pre-fills the Tests field on every new consultation.'),
+                        Textarea::make('default_differential_diagnosis')->rows(2)
+                            ->helperText('Pre-fills the Differential Diagnosis field on every new consultation.'),
+                        Textarea::make('default_consult_diagnosis')->rows(2)
+                            ->helperText('Pre-fills the Diagnosis field on every new consultation.'),
                     ]),
             ])
             ->statePath('data');

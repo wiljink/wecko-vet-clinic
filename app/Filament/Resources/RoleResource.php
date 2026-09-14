@@ -34,7 +34,8 @@ class RoleResource extends Resource
     {
         return $form->schema([
             Forms\Components\TextInput::make('name')->required()->unique(ignoreRecord: true)
-                ->disabled(fn (?Role $record) => $record?->name === 'principal'),
+                ->disabled(fn (?Role $record) => $record?->name === 'principal')
+                ->helperText('Shown wherever roles are listed or assigned to a user; the built-in "principal" role cannot be renamed.'),
             Forms\Components\CheckboxList::make('permissions')
                 ->relationship('permissions', 'name')
                 ->options(Permission::orderBy('name')->pluck('name', 'id'))

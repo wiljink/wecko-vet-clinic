@@ -26,8 +26,10 @@ class AccountNameReferenceResource extends Resource
     protected static function referenceFormFields(): array
     {
         return [
-            Forms\Components\TextInput::make('code')->maxLength(50),
-            Forms\Components\TextInput::make('name')->required()->maxLength(255),
+            Forms\Components\TextInput::make('code')->maxLength(50)
+                ->helperText('Short internal code for this account status, used in reports and exports.'),
+            Forms\Components\TextInput::make('name')->required()->maxLength(255)
+                ->helperText('Financial standing label shown when setting a client\'s account reference, e.g. ACCOUNT OK, BAD DEBTOR.'),
         ];
     }
 

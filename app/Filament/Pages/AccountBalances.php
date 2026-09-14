@@ -56,7 +56,8 @@ class AccountBalances extends Page implements HasForms
             Select::make('clientId')->label('Client')
                 ->options(fn () => Client::orderBy('surname')->get()->mapWithKeys(fn (Client $c) => [$c->id => $c->full_name]))
                 ->searchable()->live()
-                ->afterStateUpdated(fn ($state) => $this->clientId = $state),
+                ->afterStateUpdated(fn ($state) => $this->clientId = $state)
+                ->helperText('Pick a client to see their statement of account, aging, and current balance.'),
         ])->statePath('data');
     }
 

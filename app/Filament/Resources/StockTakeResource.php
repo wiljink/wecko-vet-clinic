@@ -34,16 +34,21 @@ class StockTakeResource extends Resource
     {
         return $form->schema([
             Forms\Components\Section::make()->columns(3)->schema([
-                Forms\Components\TextInput::make('reference')->disabled()->dehydrated(false)->placeholder('Auto'),
-                Forms\Components\DatePicker::make('take_date')->default(now())->required(),
+                Forms\Components\TextInput::make('reference')->disabled()->dehydrated(false)->placeholder('Auto')
+                    ->helperText('Assigned automatically once the stock take is saved.'),
+                Forms\Components\DatePicker::make('take_date')->default(now())->required()
+                    ->helperText('Date the physical count was performed.'),
                 Forms\Components\Placeholder::make('status')->content(fn (?StockTake $record) => ucfirst($record?->status ?? 'open')),
-                Forms\Components\TextInput::make('notes')->columnSpanFull(),
+                Forms\Components\TextInput::make('notes')->columnSpanFull()
+                    ->helperText('Optional notes about this stock take, e.g. which area or shelves were counted.'),
             ]),
             Forms\Components\Repeater::make('items')->relationship()->columnSpanFull()
                 ->disabled(fn (?StockTake $record) => $record?->isPosted())
                 ->schema([
-                    Forms\Components\Select::make('product_id')->relationship('product', 'name')->required()->searchable()->distinct(),
-                    Forms\Components\TextInput::make('system_qty')->numeric()->disabled()->dehydrated(),
+                    Forms\Components\Select::make('product_id')->relationship('product', 'name')->required()->searchable()->distinct()
+                        ->helperText('Product being counted.'),
+                    Forms\Components\TextInput::make('system_qty')->numeric()->disabled()->dehydrated()
+                        ->helperText('Quantity the system currently expects on hand, for comparison against your physical count.'),
                     Forms\Components\TextInput::make('counted_qty')->numeric()
                         ->helperText('Leave blank for items you did not count — a blank is never treated as zero.'),
                 ])->columns(3)->addActionLabel('Add product')->defaultItems(0)

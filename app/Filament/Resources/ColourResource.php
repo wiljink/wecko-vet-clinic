@@ -26,7 +26,8 @@ class ColourResource extends Resource
     protected static function referenceFormFields(): array
     {
         return [
-            Forms\Components\TextInput::make('name')->required()->maxLength(255),
+            Forms\Components\TextInput::make('name')->required()->maxLength(255)
+                ->helperText('Coat/fur colour option offered when recording a patient\'s profile.'),
         ];
     }
 

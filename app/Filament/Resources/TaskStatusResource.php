@@ -26,7 +26,8 @@ class TaskStatusResource extends Resource
     protected static function referenceFormFields(): array
     {
         return [
-            Forms\Components\TextInput::make('name')->required()->maxLength(255),
+            Forms\Components\TextInput::make('name')->required()->maxLength(255)
+                ->helperText('Status label for internal staff tasks, e.g. To Do, In Progress, Done.'),
         ];
     }
 

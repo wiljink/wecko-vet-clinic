@@ -26,9 +26,12 @@ class SuburbPostcodeResource extends Resource
     protected static function referenceFormFields(): array
     {
         return [
-            Forms\Components\Select::make('state_id')->relationship('state', 'name')->searchable()->preload(),
-            Forms\Components\TextInput::make('suburb')->required()->maxLength(255),
-            Forms\Components\TextInput::make('postcode')->maxLength(10),
+            Forms\Components\Select::make('state_id')->relationship('state', 'name')->searchable()->preload()
+                ->helperText('State/province this suburb belongs to.'),
+            Forms\Components\TextInput::make('suburb')->required()->maxLength(255)
+                ->helperText('Suburb/town name available when entering a client address.'),
+            Forms\Components\TextInput::make('postcode')->maxLength(10)
+                ->helperText('Postal code that auto-fills alongside this suburb on client addresses.'),
         ];
     }
 

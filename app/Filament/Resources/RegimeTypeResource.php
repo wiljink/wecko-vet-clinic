@@ -26,7 +26,8 @@ class RegimeTypeResource extends Resource
     protected static function referenceFormFields(): array
     {
         return [
-            Forms\Components\TextInput::make('name')->required()->maxLength(255),
+            Forms\Components\TextInput::make('name')->required()->maxLength(255)
+                ->helperText('Drug regime/protocol name selectable when prescribing a treatment course.'),
             Forms\Components\TextInput::make('total_qty_used')->numeric()->default(1)->required()
                 ->helperText('Units dispensed per course — auto-fills the quantity on a consult/sale line.'),
         ];

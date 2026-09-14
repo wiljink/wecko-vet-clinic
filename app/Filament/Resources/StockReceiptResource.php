@@ -35,16 +35,20 @@ class StockReceiptResource extends Resource
     {
         return $form->schema([
             Forms\Components\Section::make()->columns(3)->schema([
-                Forms\Components\TextInput::make('receipt_no')->disabled()->dehydrated(false)->placeholder('Auto'),
+                Forms\Components\TextInput::make('receipt_no')->disabled()->dehydrated(false)->placeholder('Auto')
+                    ->helperText('Assigned automatically once the receipt is saved.'),
                 Forms\Components\Select::make('supplier_id')->relationship('supplier', 'name')->required()->searchable()->preload()->live()
-                    ->disabled(fn (?StockReceipt $record) => $record?->isPosted()),
+                    ->disabled(fn (?StockReceipt $record) => $record?->isPosted())
+                    ->helperText('Supplier this stock is being received from.'),
                 Forms\Components\Select::make('inventory_order_id')->label('Against order')
                     ->relationship('order', 'order_no', fn (\Illuminate\Database\Eloquent\Builder $query, Forms\Get $get) => $query
                         ->when($get('supplier_id'), fn ($q, $s) => $q->where('supplier_id', $s))
                         ->whereIn('status', ['placed', 'partially_received']))
                     ->searchable()->helperText('Leave blank for non-ordered stock.'),
-                Forms\Components\DatePicker::make('received_date')->default(now())->required(),
-                Forms\Components\TextInput::make('supplier_doc_no')->label('Supplier invoice #'),
+                Forms\Components\DatePicker::make('received_date')->default(now())->required()
+                    ->helperText('Date the stock physically arrived.'),
+                Forms\Components\TextInput::make('supplier_doc_no')->label('Supplier invoice #')
+                    ->helperText('Supplier\'s invoice or delivery note number, for matching against their paperwork.'),
                 Forms\Components\Placeholder::make('status')->content(fn (?StockReceipt $record) => ucfirst($record?->status ?? 'draft')),
             ]),
             Forms\Components\Repeater::make('items')->relationship()->columnSpanFull()
@@ -53,17 +57,23 @@ class StockReceiptResource extends Resource
                     Forms\Components\Select::make('product_id')->label('Product')->required()
                         ->options(fn () => Product::whereIn('kind', ['product', 'vaccine'])->orderBy('name')->pluck('name', 'id'))
                         ->searchable()->live()
+                        ->helperText('Selecting a product fills in its current cost and sell price below.')
                         ->afterStateUpdated(function ($state, Forms\Set $set) {
                             if ($p = Product::find($state)) {
                                 $set('unit_cost_ex_tax', $p->unit_cost_ex_tax);
                                 $set('sell_price_ex_tax', $p->sell_price_ex_tax);
                             }
                         }),
-                    Forms\Components\TextInput::make('qty')->numeric()->required()->default(1),
-                    Forms\Components\TextInput::make('unit_cost_ex_tax')->numeric()->prefix('₱')->required(),
-                    Forms\Components\TextInput::make('sell_price_ex_tax')->numeric()->prefix('₱')->label('New sell price'),
-                    Forms\Components\TextInput::make('batch_no'),
-                    Forms\Components\DatePicker::make('expiry_on'),
+                    Forms\Components\TextInput::make('qty')->numeric()->required()->default(1)
+                        ->helperText('Quantity actually received — may differ from what was ordered.'),
+                    Forms\Components\TextInput::make('unit_cost_ex_tax')->numeric()->prefix('₱')->required()
+                        ->helperText('Actual cost paid per unit; posting this receipt updates the product\'s cost.'),
+                    Forms\Components\TextInput::make('sell_price_ex_tax')->numeric()->prefix('₱')->label('New sell price')
+                        ->helperText('Optional — updates the product\'s sell price when this receipt is posted.'),
+                    Forms\Components\TextInput::make('batch_no')
+                        ->helperText('Batch or lot number, for products where expiry tracking matters.'),
+                    Forms\Components\DatePicker::make('expiry_on')
+                        ->helperText('Expiry date of this batch, used for labels and expiry alerts.'),
                 ])->columns(3)->addActionLabel('Add line')->defaultItems(1),
         ]);
     }

@@ -48,8 +48,10 @@ abstract class BaseReport extends Page
     public function form(Form $form): Form
     {
         return $form->schema([
-            DatePicker::make('from')->required()->native(false)->maxDate(now())->closeOnDateSelection(),
-            DatePicker::make('to')->required()->native(false)->maxDate(now())->closeOnDateSelection(),
+            DatePicker::make('from')->required()->native(false)->maxDate(now())->closeOnDateSelection()
+                ->helperText('Start of the reporting period, inclusive.'),
+            DatePicker::make('to')->required()->native(false)->maxDate(now())->closeOnDateSelection()
+                ->helperText('End of the reporting period, inclusive.'),
         ])->columns(2)->statePath('data');
     }
 

@@ -26,7 +26,8 @@ class JobPositionResource extends Resource
     protected static function referenceFormFields(): array
     {
         return [
-            Forms\Components\TextInput::make('name')->required()->maxLength(255),
+            Forms\Components\TextInput::make('name')->required()->maxLength(255)
+                ->helperText('Job title/role available when setting up a staff member, e.g. Veterinarian, Receptionist.'),
         ];
     }
 

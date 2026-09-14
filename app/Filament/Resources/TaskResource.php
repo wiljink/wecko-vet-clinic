@@ -29,19 +29,25 @@ class TaskResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\TextInput::make('title')->required()->columnSpanFull(),
+            Forms\Components\TextInput::make('title')->required()->columnSpanFull()
+                ->helperText('Short description of what needs to be done.'),
             Forms\Components\Select::make('task_type')->options([
                 'Call back' => 'Call back', 'Order supplies' => 'Order supplies',
                 'Equipment service' => 'Equipment service', 'Lab follow-up' => 'Lab follow-up',
                 'Recall patient' => 'Recall patient', 'Admin' => 'Admin',
-            ])->searchable(),
+            ])->searchable()
+                ->helperText('Categorizes the task for filtering and reporting.'),
             Forms\Components\Select::make('provider_id')->label('Assigned to')
-                ->relationship('provider', 'name')->searchable()->preload(),
-            Forms\Components\DatePicker::make('due_on'),
+                ->relationship('provider', 'name')->searchable()->preload()
+                ->helperText('Staff member responsible for completing this task.'),
+            Forms\Components\DatePicker::make('due_on')
+                ->helperText('Date the task should be completed by; overdue tasks are highlighted in red.'),
             Forms\Components\Select::make('task_status_id')->label('Status')
                 ->relationship('status', 'name')
-                ->default(fn () => TaskStatus::where('name', 'Not Started')->value('id')),
-            Forms\Components\Textarea::make('notes')->columnSpanFull(),
+                ->default(fn () => TaskStatus::where('name', 'Not Started')->value('id'))
+                ->helperText('Tracks progress on the task from Not Started through to Completed.'),
+            Forms\Components\Textarea::make('notes')->columnSpanFull()
+                ->helperText('Extra details or instructions for whoever completes the task.'),
         ])->columns(2);
     }
 

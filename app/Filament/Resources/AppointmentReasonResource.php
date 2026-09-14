@@ -26,8 +26,10 @@ class AppointmentReasonResource extends Resource
     protected static function referenceFormFields(): array
     {
         return [
-            Forms\Components\TextInput::make('code')->maxLength(20),
-            Forms\Components\TextInput::make('reason')->required()->maxLength(255),
+            Forms\Components\TextInput::make('code')->maxLength(20)
+                ->helperText('Short internal code for this reason, used in reports and quick entry.'),
+            Forms\Components\TextInput::make('reason')->required()->maxLength(255)
+                ->helperText('Reason text shown to staff when booking an appointment, e.g. Vaccination or Follow-up.'),
         ];
     }
 

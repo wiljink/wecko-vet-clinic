@@ -188,14 +188,16 @@ class ReportBuilder
 
         usort($rows, fn ($a, $b) => $b[5] <=> $a[5]);
 
+        $agingLabels = \App\Support\ClientLedger::agingLabels();
+
         $r['tiles'] = [
             ['label' => 'Total outstanding', 'type' => 'money', 'value' => $tot['total']],
-            ['label' => 'Over 1 period', 'type' => 'money', 'value' => $tot['b1'] + $tot['b2'] + $tot['b3']],
+            ['label' => 'Overdue', 'type' => 'money', 'value' => $tot['b1'] + $tot['b2'] + $tot['b3']],
             ['label' => 'Accounts in debt', 'type' => 'number', 'value' => count($rows)],
         ];
         $r['sections'][] = [
             'title' => 'By client',
-            'columns' => [['label' => 'Client'], ['label' => 'Current', 'type' => 'money'], ['label' => '1 period', 'type' => 'money'], ['label' => '2 periods', 'type' => 'money'], ['label' => '3+ periods', 'type' => 'money'], ['label' => 'Total', 'type' => 'money']],
+            'columns' => [['label' => 'Client'], ['label' => $agingLabels['current'], 'type' => 'money'], ['label' => $agingLabels['b1'], 'type' => 'money'], ['label' => $agingLabels['b2'], 'type' => 'money'], ['label' => $agingLabels['b3'], 'type' => 'money'], ['label' => 'Total', 'type' => 'money']],
             'rows' => $rows,
             'total' => ['Total', $tot['current'], $tot['b1'], $tot['b2'], $tot['b3'], $tot['total']],
         ];

@@ -31,21 +31,26 @@ class DocumentTemplateResource extends Resource
     protected static function referenceFormFields(): array
     {
         return [
-            Forms\Components\TextInput::make('name')->required()->maxLength(255),
+            Forms\Components\TextInput::make('name')->required()->maxLength(255)
+                ->helperText('Internal label used to pick this template from lists; not shown to the client.'),
             Forms\Components\Select::make('type')->required()
                 ->options([
                     'letter' => 'Letter', 'email' => 'Email', 'sms' => 'SMS',
                     'reminder_letter' => 'Reminder — Letter', 'reminder_email' => 'Reminder — Email',
                     'reminder_sms' => 'Reminder — SMS', 'certificate' => 'Vaccination Certificate',
                     'home_care' => 'Home Care Note', 'statement' => 'Account Statement', 'marketing' => 'Marketing',
-                ])->live(),
-            Forms\Components\Select::make('channel')->options(['letter' => 'Letter', 'email' => 'Email', 'sms' => 'SMS']),
+                ])->live()
+                ->helperText('Determines which system process (reminders, certificates, statements, etc.) this template is offered for.'),
+            Forms\Components\Select::make('channel')->options(['letter' => 'Letter', 'email' => 'Email', 'sms' => 'SMS'])
+                ->helperText('How this template is delivered to the client.'),
             Forms\Components\Select::make('patient_reminder_type_id')->label('Reminder type')
                 ->relationship('reminderType', 'name')->searchable()->preload()
-                ->visible(fn (Forms\Get $get) => str_contains((string) $get('type'), 'reminder')),
+                ->visible(fn (Forms\Get $get) => str_contains((string) $get('type'), 'reminder'))
+                ->helperText('Limits this template to reminders of the selected type only.'),
             Forms\Components\TextInput::make('sequence')->numeric()->default(1)
                 ->helperText('1 = first notice, 2 = second/chaser notice.'),
-            Forms\Components\TextInput::make('subject')->maxLength(255)->columnSpanFull(),
+            Forms\Components\TextInput::make('subject')->maxLength(255)->columnSpanFull()
+                ->helperText('Used as the email subject line; ignored for letters and SMS.'),
             Forms\Components\Textarea::make('body')->required()->rows(10)->columnSpanFull()
                 ->helperText('Merge fields: {{ client.name }}, {{ patient.name }}, {{ reminder.due_on }}, {{ clinic.name }}, {{ invoice.total }}.'),
         ];

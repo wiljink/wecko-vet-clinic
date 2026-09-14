@@ -30,13 +30,20 @@ class SupplierResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\TextInput::make('name')->required(),
-            Forms\Components\TextInput::make('contact_name'),
-            Forms\Components\TextInput::make('email')->email(),
-            Forms\Components\TextInput::make('phone')->tel(),
-            Forms\Components\TextInput::make('account_no')->label('Account #'),
-            Forms\Components\Toggle::make('is_active')->default(true),
-            Forms\Components\Textarea::make('address')->columnSpanFull(),
+            Forms\Components\TextInput::make('name')->required()
+                ->helperText('Displayed throughout purchase orders, receipts and returns for this supplier.'),
+            Forms\Components\TextInput::make('contact_name')
+                ->helperText('Primary person to contact about orders and deliveries.'),
+            Forms\Components\TextInput::make('email')->email()
+                ->helperText('Used when purchase orders are emailed to the supplier.'),
+            Forms\Components\TextInput::make('phone')->tel()
+                ->helperText('Contact number for chasing orders and deliveries.'),
+            Forms\Components\TextInput::make('account_no')->label('Account #')
+                ->helperText('Your account number with this supplier, printed on purchase orders.'),
+            Forms\Components\Toggle::make('is_active')->default(true)
+                ->helperText('Inactive suppliers are hidden when creating new orders or products.'),
+            Forms\Components\Textarea::make('address')->columnSpanFull()
+                ->helperText('Supplier\'s postal address, printed on purchase orders.'),
         ])->columns(2);
     }
 

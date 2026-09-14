@@ -26,8 +26,10 @@ class LocationResource extends Resource
     protected static function referenceFormFields(): array
     {
         return [
-            Forms\Components\TextInput::make('name')->required()->maxLength(255),
-            Forms\Components\TextInput::make('description')->maxLength(255),
+            Forms\Components\TextInput::make('name')->required()->maxLength(255)
+                ->helperText('Room or branch name shown when assigning appointments and stock to a location.'),
+            Forms\Components\TextInput::make('description')->maxLength(255)
+                ->helperText('Optional note to help staff tell similarly named locations apart.'),
         ];
     }
 

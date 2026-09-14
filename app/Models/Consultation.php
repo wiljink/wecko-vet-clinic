@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToLocation;
 use App\Models\Concerns\RecordsActivity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 
 class Consultation extends Model
 {
-    use RecordsActivity;
+    use BelongsToLocation, RecordsActivity;
 
     protected $fillable = [
         'client_id', 'patient_id', 'provider_id', 'location_id', 'appointment_id',
@@ -58,11 +59,6 @@ class Consultation extends Model
     public function provider(): BelongsTo
     {
         return $this->belongsTo(User::class, 'provider_id');
-    }
-
-    public function location(): BelongsTo
-    {
-        return $this->belongsTo(Location::class);
     }
 
     public function appointment(): BelongsTo
@@ -147,6 +143,7 @@ class Consultation extends Model
 
                 if (in_array($item->kind, ['drug', 'vaccination'], true) && $product->tracksStock()) {
                     StockMovement::record($product, 'sale', -(float) $item->qty, [
+                        'location_id' => $this->location_id,
                         'reason' => "Consult #{$this->id}",
                         'source_type' => $this->getMorphClass(),
                         'source_id' => $this->id,
@@ -233,6 +230,7 @@ class Consultation extends Model
         foreach ($vaccine->consumables as $consumable) {
             if ($consumable->tracksStock()) {
                 StockMovement::record($consumable, 'vaccine_consumable', -(float) $consumable->pivot->qty, [
+                    'location_id' => $this->location_id,
                     'reason' => "Vaccine {$vaccine->name} — consult #{$this->id}",
                     'source_type' => $this->getMorphClass(),
                     'source_id' => $this->id,

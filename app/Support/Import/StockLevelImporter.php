@@ -2,17 +2,29 @@
 
 namespace App\Support\Import;
 
+use App\Models\Location;
 use App\Models\Product;
+use App\Models\ProductStockLevel;
 use App\Models\StockMovement;
+use App\Support\LocationContext;
 
 /**
- * Sets on-hand quantities from a stock-count / opening-balance sheet. For each
+ * Sets on-hand quantities from a stock-count / opening-balance sheet, for the
+ * current user's acting branch (falling back to the main branch). For each
  * product it posts a single adjusting {@see StockMovement} equal to the
  * difference between the counted quantity and the current cached quantity, so
  * the ledger stays the source of truth.
  */
 class StockLevelImporter extends Importer
 {
+    private ?int $locationId = null;
+
+    private function locationId(): int
+    {
+        return $this->locationId ??= LocationContext::activeId() ?? Location::main()?->id
+            ?? throw new \RuntimeException('No location available to import stock levels into.');
+    }
+
     public function label(): string
     {
         return 'Opening stock / stock levels';
@@ -61,7 +73,7 @@ class StockLevelImporter extends Importer
         }
 
         $counted = $this->num($row, 'qty_on_hand');
-        $current = (float) $product->qty_on_hand;
+        $current = ProductStockLevel::qtyOf($product, $this->locationId());
         $delta = round($counted - $current, 2);
 
         if ($delta === 0.0) {
@@ -70,6 +82,7 @@ class StockLevelImporter extends Importer
 
         if (! $dryRun) {
             StockMovement::record($product, 'stock_take', $delta, array_filter([
+                'location_id' => $this->locationId(),
                 'reason' => 'Imported stock level',
                 'unit_cost_ex_tax' => $this->str($row, 'unit_cost_ex_tax') !== '' ? $this->num($row, 'unit_cost_ex_tax') : $product->unit_cost_ex_tax,
                 'batch_no' => $this->str($row, 'batch_no') ?: null,

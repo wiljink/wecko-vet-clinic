@@ -31,7 +31,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'banking_batch', 'till_session',
         // Inventory
         'product', 'supplier', 'stock_movement', 'inventory_order', 'stock_receipt',
-        'stock_take', 'inventory_adjustment', 'inventory_return',
+        'stock_take', 'inventory_adjustment', 'inventory_return', 'stock_transfer',
         // Setup
         'reference_data', 'company_setting', 'document_template', 'marketing_campaign',
         // System
@@ -55,7 +55,7 @@ class RolesAndPermissionsSeeder extends Seeder
         // Extra fine-grained abilities beyond CRUD.
         $permissions = array_merge($permissions, [
             'finalize_consultation', 'reopen_consultation',
-            'post_stock_take', 'post_stock_receipt',
+            'post_stock_take', 'post_stock_receipt', 'post_stock_transfer',
             'process_payment', 'process_refund', 'make_account_adjustment',
             'run_statements', 'run_reminders', 'run_marketing',
             'import_data',
@@ -81,14 +81,14 @@ class RolesAndPermissionsSeeder extends Seeder
                 'consultation', 'standard_consult', 'vaccination', 'prescription',
                 'counter_sale', 'invoice', 'payment', 'account_adjustment',
                 'product', 'supplier', 'stock_movement', 'inventory_order', 'stock_receipt',
-                'stock_take', 'inventory_adjustment', 'inventory_return', 'report',
+                'stock_take', 'inventory_adjustment', 'inventory_return', 'stock_transfer', 'report',
                 'reference_data', 'document_template',
             ] as $key) {
                 $q->orWhere('name', 'like', "%_{$key}");
             }
         })->orWhereIn('name', [
             'finalize_consultation', 'reopen_consultation', 'post_stock_take',
-            'post_stock_receipt', 'process_payment', 'process_refund',
+            'post_stock_receipt', 'post_stock_transfer', 'process_payment', 'process_refund',
             'make_account_adjustment', 'run_statements', 'run_reminders', 'import_data',
         ])->get());
 

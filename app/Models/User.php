@@ -25,6 +25,7 @@ class User extends Authenticatable implements FilamentUser
         'is_provider',
         'is_principal',
         'can_login',
+        'home_location_id',
     ];
 
     protected $hidden = [
@@ -53,9 +54,32 @@ class User extends Authenticatable implements FilamentUser
         return $this->belongsTo(JobPosition::class);
     }
 
+    public function homeLocation(): BelongsTo
+    {
+        return $this->belongsTo(Location::class, 'home_location_id');
+    }
+
     /** A provider is a vet/nurse who attends patients and owns appointments. */
     public function scopeProviders($query)
     {
         return $query->where('is_provider', true);
+    }
+
+    /**
+     * Branch ids this user may view/act on. Principals see every branch;
+     * everyone else is pinned to their home branch (or none, if unassigned).
+     */
+    public function accessibleLocationIds(): array
+    {
+        if ($this->hasRole('principal')) {
+            return Location::query()->pluck('id')->all();
+        }
+
+        return $this->home_location_id ? [$this->home_location_id] : [];
+    }
+
+    public function canSwitchLocation(): bool
+    {
+        return $this->hasRole('principal');
     }
 }

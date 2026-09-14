@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToLocation;
 use App\Models\Concerns\GeneratesReference;
 use App\Models\Concerns\RecordsActivity;
 use Illuminate\Database\Eloquent\Model;
@@ -11,14 +12,14 @@ use Illuminate\Support\Facades\DB;
 
 class StockReceipt extends Model
 {
-    use GeneratesReference, RecordsActivity;
+    use BelongsToLocation, GeneratesReference, RecordsActivity;
 
     protected string $referenceColumn = 'receipt_no';
 
     protected string $referencePrefix = 'SR';
 
     protected $fillable = [
-        'receipt_no', 'supplier_id', 'inventory_order_id', 'received_date', 'status',
+        'receipt_no', 'supplier_id', 'inventory_order_id', 'location_id', 'received_date', 'status',
         'supplier_doc_no', 'notes', 'total_ex_tax', 'posted_at', 'created_by',
     ];
 
@@ -75,6 +76,7 @@ class StockReceipt extends Model
                 $product = $item->product;
 
                 StockMovement::record($product, 'receipt', (float) $item->qty, [
+                    'location_id' => $this->location_id,
                     'unit_cost_ex_tax' => $item->unit_cost_ex_tax,
                     'batch_no' => $item->batch_no,
                     'expiry_on' => $item->expiry_on,

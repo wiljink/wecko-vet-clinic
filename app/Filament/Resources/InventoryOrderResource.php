@@ -7,6 +7,7 @@ use App\Filament\Resources\InventoryOrderResource\Pages;
 use App\Models\InventoryOrder;
 use App\Models\Product;
 use App\Models\Supplier;
+use App\Support\LocationContext;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -41,6 +42,7 @@ class InventoryOrderResource extends Resource
                 Forms\Components\Select::make('supplier_id')->relationship('supplier', 'name')
                     ->required()->searchable()->preload()->live()
                     ->helperText('Supplier this purchase order will be sent to; changing it filters the products below.'),
+                LocationContext::selectField()->helperText('Branch this order is being placed for.'),
                 Forms\Components\Select::make('status')->options([
                     'draft' => 'Draft', 'placed' => 'Placed', 'partially_received' => 'Partially received',
                     'received' => 'Received', 'cancelled' => 'Cancelled',
@@ -83,6 +85,7 @@ class InventoryOrderResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('order_no')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('supplier.name')->sortable()->searchable(),
+                Tables\Columns\TextColumn::make('location.name')->label('Branch')->toggleable(),
                 Tables\Columns\TextColumn::make('order_date')->date('d M Y')->sortable(),
                 Tables\Columns\TextColumn::make('delivery_date')->date('d M Y')->toggleable(),
                 Tables\Columns\TextColumn::make('items_count')->counts('items')->label('Lines')->badge(),
@@ -113,9 +116,12 @@ class InventoryOrderResource extends Resource
                     ->form([
                         Forms\Components\Select::make('supplier_id')->label('Supplier')->required()
                             ->options(Supplier::where('is_active', true)->pluck('name', 'id'))->searchable(),
+                        Forms\Components\Select::make('location_id')->label('Branch')->required()
+                            ->options(fn () => LocationContext::accessibleOptions())
+                            ->default(fn () => LocationContext::activeId()),
                     ])
                     ->action(function (array $data) {
-                        $order = InventoryOrder::autoFillFor(Supplier::find($data['supplier_id']));
+                        $order = InventoryOrder::autoFillFor(Supplier::find($data['supplier_id']), (int) $data['location_id']);
 
                         if ($order->items()->count() === 0) {
                             $order->delete();

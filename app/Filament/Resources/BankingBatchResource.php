@@ -39,6 +39,7 @@ class BankingBatchResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('reference')->searchable(),
                 Tables\Columns\TextColumn::make('banking_date')->date('d M Y')->sortable(),
+                Tables\Columns\TextColumn::make('location.name')->label('Branch')->placeholder('All branches')->toggleable(),
                 Tables\Columns\TextColumn::make('cash_total')->money('PHP'),
                 Tables\Columns\TextColumn::make('cheque_total')->money('PHP'),
                 Tables\Columns\TextColumn::make('eftpos_total')->money('PHP')->label('EFTPOS'),

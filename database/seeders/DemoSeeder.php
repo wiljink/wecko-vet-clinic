@@ -8,6 +8,7 @@ use App\Models\ClientAddress;
 use App\Models\Colour;
 use App\Models\Group;
 use App\Models\JobPosition;
+use App\Models\Location;
 use App\Models\Patient;
 use App\Models\PatientReminderType;
 use App\Models\Product;
@@ -29,8 +30,12 @@ use Illuminate\Support\Facades\DB;
  */
 class DemoSeeder extends Seeder
 {
+    /** The two demo branches, keyed by name — id 0 is always the main branch. */
+    private array $branches = [];
+
     public function run(): void
     {
+        $this->branches();
         $this->staff();
         $this->inventory();
         $this->clientsAndPatients();
@@ -39,6 +44,27 @@ class DemoSeeder extends Seeder
         $this->counterSales();
         $this->financials();
         $this->reminders();
+    }
+
+    /** Two branches so the multi-branch dashboard and stock features have real data to show. */
+    private function branches(): void
+    {
+        $main = Location::firstOrCreate(
+            ['name' => 'Wecko Pet Clinic — Quezon City'],
+            [
+                'code' => 'QC', 'address' => '123 Katipunan Ave, Quezon City, Metro Manila',
+                'phone' => '(02) 8123 4567', 'email' => 'qc@wecko.test', 'is_main' => true,
+            ],
+        );
+        $second = Location::firstOrCreate(
+            ['name' => 'Wecko Pet Clinic — Makati'],
+            [
+                'code' => 'MKT', 'address' => '456 Ayala Ave, Makati, Metro Manila',
+                'phone' => '(02) 8765 4321', 'email' => 'makati@wecko.test',
+            ],
+        );
+
+        $this->branches = [$main->id, $second->id];
     }
 
     private function reminders(): void
@@ -80,6 +106,7 @@ class DemoSeeder extends Seeder
 
             $payment = \App\Models\Payment::create([
                 'client_id' => $invoice->client_id,
+                'location_id' => $invoice->location_id,
                 'payment_type' => fake()->randomElement(['cash', 'cash', 'eftpos', 'credit_card', 'cheque']),
                 'amount' => $amount,
                 'reference' => 'Account payment',
@@ -104,6 +131,7 @@ class DemoSeeder extends Seeder
         // One closed till session for yesterday.
         $till = \App\Models\TillSession::create([
             'session_date' => now()->subDay()->toDateString(),
+            'location_id' => $this->branches[0],
             'opening_float' => 2000,
             'denominations' => ['1000' => 2, '500' => 3, '100' => 8, '50' => 4, '20' => 5, '10' => 3],
         ]);
@@ -131,6 +159,7 @@ class DemoSeeder extends Seeder
                 'walk_in_name' => $walkIn ? fake()->name() : null,
                 'client_id' => $walkIn ? null : fake()->randomElement($clients),
                 'provider_id' => fake()->randomElement($providers),
+                'location_id' => fake()->randomElement($this->branches),
                 'sale_date' => fake()->dateTimeBetween('-2 months', 'now'),
             ]);
 
@@ -198,6 +227,7 @@ class DemoSeeder extends Seeder
                 'client_id' => $patient->client_id,
                 'patient_id' => $patient->id,
                 'provider_id' => fake()->randomElement($providers),
+                'location_id' => fake()->randomElement($this->branches),
                 'consult_date' => $date,
                 'appointment_reason_id' => fake()->randomElement($reasons),
                 'weight' => $patient->weight,
@@ -383,17 +413,25 @@ class DemoSeeder extends Seeder
                 'print_label' => $group === 'Drugs',
             ]);
 
-            // Opening stock.
+            // Opening stock at the main branch, plus a smaller holding at the second branch.
             StockMovement::record($p, 'opening', fake()->numberBetween(20, 150), [
+                'location_id' => $this->branches[0],
+                'reason' => 'Opening balance',
+                'unit_cost_ex_tax' => $cost,
+                'moved_at' => now()->subMonths(2),
+            ]);
+            StockMovement::record($p, 'opening', fake()->numberBetween(10, 60), [
+                'location_id' => $this->branches[1],
                 'reason' => 'Opening balance',
                 'unit_cost_ex_tax' => $cost,
                 'moved_at' => now()->subMonths(2),
             ]);
         }
 
-        // A posted stock receipt brings the vaccines onto the shelf.
+        // A posted stock receipt brings the vaccines onto the shelf at the main branch.
         $receipt = \App\Models\StockReceipt::create([
             'supplier_id' => $suppliers->firstWhere('name', 'Zoetis Philippines')->id,
+            'location_id' => $this->branches[0],
             'received_date' => now()->subWeeks(3)->toDateString(),
             'supplier_doc_no' => 'ZP-'.fake()->numerify('#####'),
         ]);
@@ -425,7 +463,7 @@ class DemoSeeder extends Seeder
             ['Rowena Flores', 'rowena@wecko.test', 'receptionist', $recept, false, null],
         ];
 
-        foreach ($people as [$name, $email, $role, $position, $isProvider, $licence]) {
+        foreach ($people as $i => [$name, $email, $role, $position, $isProvider, $licence]) {
             $user = User::updateOrCreate(['email' => $email], [
                 'name' => $name,
                 'password' => bcrypt('password'),
@@ -434,6 +472,7 @@ class DemoSeeder extends Seeder
                 'is_provider' => $isProvider,
                 'can_login' => true,
                 'email_verified_at' => now(),
+                'home_location_id' => $this->branches[$i % count($this->branches)],
             ]);
             $user->syncRoles([$role]);
         }

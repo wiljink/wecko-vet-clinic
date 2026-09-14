@@ -47,6 +47,9 @@ class UserResource extends Resource
                     ->helperText('Printed on prescriptions and certificates signed by this user.'),
                 Forms\Components\Select::make('roles')->multiple()->relationship('roles', 'name')->preload()
                     ->helperText('Security level. "principal" has full access to everything.'),
+                Forms\Components\Select::make('home_location_id')->label('Home branch')
+                    ->relationship('homeLocation', 'name')->searchable()->preload()
+                    ->helperText('Branch this user is restricted to. Principals can see and switch between every branch regardless of this setting.'),
             ]),
             Forms\Components\Section::make('Access')->columns(3)->schema([
                 Forms\Components\Toggle::make('is_provider')->label('Is a provider (vet / nurse who attends patients)')
@@ -67,6 +70,7 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('email')->searchable(),
                 Tables\Columns\TextColumn::make('jobPosition.name')->label('Position')->badge(),
                 Tables\Columns\TextColumn::make('roles.name')->label('Roles')->badge(),
+                Tables\Columns\TextColumn::make('homeLocation.name')->label('Branch')->toggleable(),
                 Tables\Columns\TextColumn::make('licence_no')->label('Licence')->toggleable(),
                 Tables\Columns\IconColumn::make('is_provider')->boolean()->label('Provider'),
                 Tables\Columns\IconColumn::make('can_login')->boolean()->label('Login'),

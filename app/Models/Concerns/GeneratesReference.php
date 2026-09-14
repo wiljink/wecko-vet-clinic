@@ -21,7 +21,9 @@ trait GeneratesReference
             $prefix = $model->referencePrefix ?? strtoupper(substr(class_basename($model), 0, 3));
             $year = now()->year;
 
-            $last = static::query()
+            // Numbering must stay globally unique regardless of any branch scoping
+            // a model applies (e.g. BelongsToLocation), so bypass global scopes here.
+            $last = static::withoutGlobalScopes()
                 ->where($column, 'like', "{$prefix}-{$year}-%")
                 ->orderByDesc($column)
                 ->value($column);

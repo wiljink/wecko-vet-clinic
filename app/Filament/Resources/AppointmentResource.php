@@ -8,6 +8,7 @@ use App\Models\Appointment;
 use App\Models\AppointmentStatus;
 use App\Models\Client;
 use App\Models\Patient;
+use App\Support\LocationContext;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -48,8 +49,7 @@ class AppointmentResource extends Resource
                     ->relationship('provider', 'name', fn (\Illuminate\Database\Eloquent\Builder $query) => $query->where('is_provider', true))
                     ->searchable()->preload()
                     ->helperText('Vet or staff member who will see the patient.'),
-                Forms\Components\Select::make('location_id')->relationship('location', 'name')->searchable()->preload()
-                    ->helperText('Clinic branch or room where the appointment takes place.'),
+                LocationContext::selectField()->helperText('Branch or room where the appointment takes place.'),
                 Forms\Components\DateTimePicker::make('starts_at')->required()->seconds(false)->native(false)->live()
                     ->helperText('Date and time the appointment is scheduled to begin.'),
                 Forms\Components\Select::make('duration_minutes')->options([

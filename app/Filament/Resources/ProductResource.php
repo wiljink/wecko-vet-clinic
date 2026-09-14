@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Concerns\HasResourcePermissions;
 use App\Filament\Resources\ProductResource\Pages;
+use App\Filament\Resources\ProductResource\RelationManagers;
 use App\Models\Product;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -118,8 +119,8 @@ class ProductResource extends Resource
                     ->helperText('Auto-order is raised when qty on hand drops below this.'),
                 Forms\Components\TextInput::make('max_holding')->numeric()->default(0)
                     ->helperText('Auto-order tops the shelf back up to here.'),
-                Forms\Components\TextInput::make('qty_on_hand')->numeric()->disabled()->dehydrated(false)
-                    ->helperText('Adjusted via stock receipts, takes, adjustments and sales.'),
+                Forms\Components\TextInput::make('qty_on_hand')->label('On hand (all branches)')->numeric()->disabled()->dehydrated(false)
+                    ->helperText('Total across every branch; adjusted via stock receipts, takes, adjustments, transfers and sales.'),
                 Forms\Components\Toggle::make('has_expiry')->label('Track expiry / batch dates')
                     ->helperText('Requires a batch number and expiry date whenever stock of this item is received.'),
             ]),
@@ -201,6 +202,13 @@ class ProductResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return static::$kind === 'service' ? [] : [
+            RelationManagers\StockLevelsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToLocation;
 use App\Models\Concerns\GeneratesReference;
 use App\Models\Concerns\RecordsActivity;
 use Illuminate\Database\Eloquent\Builder;
@@ -12,14 +13,14 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Invoice extends Model
 {
-    use GeneratesReference, RecordsActivity;
+    use BelongsToLocation, GeneratesReference, RecordsActivity;
 
     protected string $referenceColumn = 'invoice_no';
 
     protected string $referencePrefix = 'INV';
 
     protected $fillable = [
-        'invoice_no', 'client_id', 'patient_id', 'source_type', 'source_id',
+        'invoice_no', 'client_id', 'patient_id', 'location_id', 'source_type', 'source_id',
         'invoice_date', 'due_date', 'subtotal_ex_tax', 'discount_total', 'tax_total',
         'total', 'amount_paid', 'balance', 'status', 'notes', 'created_by',
     ];
@@ -98,6 +99,7 @@ class Invoice extends Model
         $invoice = static::create([
             'client_id' => $source->client_id,
             'patient_id' => $source->patient_id ?? null,
+            'location_id' => $source->location_id ?? null,
             'source_type' => $source->getMorphClass(),
             'source_id' => $source->getKey(),
             'invoice_date' => ($source->consult_date ?? $source->sale_date ?? now()),

@@ -7,6 +7,7 @@ use App\Filament\Resources\PaymentResource\Pages;
 use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\Payment;
+use App\Support\LocationContext;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -38,6 +39,7 @@ class PaymentResource extends Resource
             Forms\Components\Select::make('payment_type')->required()->default('cash')
                 ->options(Payment::TYPES)->live()
                 ->helperText('How the money was received — determines which fields below apply and which banking total it feeds into.'),
+            LocationContext::selectField()->helperText('Branch this payment was received at.'),
             Forms\Components\TextInput::make('amount')->numeric()->prefix('₱')->required()->live(onBlur: true)
                 ->helperText('Total amount received, before any change is given back.'),
             Forms\Components\TextInput::make('cash_received')->numeric()->prefix('₱')
@@ -67,6 +69,7 @@ class PaymentResource extends Resource
                 Tables\Columns\TextColumn::make('payment_no')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('received_at')->dateTime('d M Y H:i')->sortable(),
                 Tables\Columns\TextColumn::make('client.full_name')->label('Client')->searchable(['surname']),
+                Tables\Columns\TextColumn::make('location.name')->label('Branch')->toggleable(),
                 Tables\Columns\TextColumn::make('payment_type')->badge()
                     ->formatStateUsing(fn (string $state) => Payment::TYPES[$state] ?? $state),
                 Tables\Columns\TextColumn::make('amount')->money('PHP')

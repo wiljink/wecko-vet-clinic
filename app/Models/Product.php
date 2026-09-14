@@ -106,6 +106,11 @@ class Product extends Model
         return $this->hasMany(StockMovement::class);
     }
 
+    public function stockLevels(): HasMany
+    {
+        return $this->hasMany(ProductStockLevel::class);
+    }
+
     /** Products consumed each time this vaccine is administered. */
     public function consumables(): BelongsToMany
     {

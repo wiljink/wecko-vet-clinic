@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToLocation;
 use App\Models\Concerns\GeneratesReference;
 use App\Models\Concerns\RecordsActivity;
 use Illuminate\Database\Eloquent\Model;
@@ -10,11 +11,11 @@ use Illuminate\Support\Facades\DB;
 
 class StockTake extends Model
 {
-    use GeneratesReference, RecordsActivity;
+    use BelongsToLocation, GeneratesReference, RecordsActivity;
 
     protected string $referencePrefix = 'ST';
 
-    protected $fillable = ['reference', 'take_date', 'status', 'notes', 'posted_at', 'created_by'];
+    protected $fillable = ['reference', 'take_date', 'location_id', 'status', 'notes', 'posted_at', 'created_by'];
 
     protected $casts = ['take_date' => 'date', 'posted_at' => 'datetime'];
 
@@ -33,14 +34,14 @@ class StockTake extends Model
         return $this->status === 'posted';
     }
 
-    /** Seed a line for every stock-tracked product with the current on-hand snapshot. */
+    /** Seed a line for every stock-tracked product with the current on-hand snapshot at this branch. */
     public function loadAllProducts(): void
     {
         Product::query()->whereIn('kind', ['product', 'vaccine'])->where('is_active', true)
             ->get()
             ->each(fn (Product $p) => $this->items()->firstOrCreate(
                 ['product_id' => $p->id],
-                ['system_qty' => $p->qty_on_hand],
+                ['system_qty' => ProductStockLevel::qtyOf($p, $this->location_id)],
             ));
     }
 
@@ -60,13 +61,14 @@ class StockTake extends Model
                     continue;
                 }
 
-                $variance = (float) $item->counted_qty - (float) $item->product->qty_on_hand;
+                $variance = (float) $item->counted_qty - ProductStockLevel::qtyOf($item->product, $this->location_id);
 
                 if (abs($variance) < 0.0001) {
                     continue;
                 }
 
                 StockMovement::record($item->product, 'stock_take', $variance, [
+                    'location_id' => $this->location_id,
                     'reason' => "Stock take {$this->reference}",
                     'source_type' => $this->getMorphClass(),
                     'source_id' => $this->id,

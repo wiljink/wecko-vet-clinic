@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToLocation;
 use App\Models\Concerns\RecordsActivity;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class TillSession extends Model
 {
-    use RecordsActivity;
+    use BelongsToLocation, RecordsActivity;
 
     protected $fillable = [
         'session_date', 'location_id', 'opening_float', 'denominations',
@@ -25,20 +25,17 @@ class TillSession extends Model
         'closed_at' => 'datetime',
     ];
 
-    public function location(): BelongsTo
-    {
-        return $this->belongsTo(Location::class);
-    }
-
-    /** Cash the system expects in the drawer = opening float + cash payments today. */
+    /** Cash the system expects in the drawer = opening float + this branch's cash payments today. */
     public function expectedCash(): float
     {
         $cashToday = Payment::where('payment_type', 'cash')
+            ->where('location_id', $this->location_id)
             ->where('is_refund', false)
             ->whereDate('received_at', $this->session_date)
             ->sum('amount');
 
         $refundsToday = Payment::where('payment_type', 'cash')
+            ->where('location_id', $this->location_id)
             ->where('is_refund', true)
             ->whereDate('received_at', $this->session_date)
             ->sum('amount');

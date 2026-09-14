@@ -40,6 +40,7 @@ class InvoiceResource extends Resource
                 Tables\Columns\TextColumn::make('invoice_no')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('invoice_date')->date('d M Y')->sortable(),
                 Tables\Columns\TextColumn::make('client.full_name')->label('Client')->searchable(['surname'])->sortable(),
+                Tables\Columns\TextColumn::make('location.name')->label('Branch')->toggleable(),
                 Tables\Columns\TextColumn::make('patient.name')->label('Patient')->toggleable(),
                 Tables\Columns\TextColumn::make('source_type')->label('Source')->badge()
                     ->formatStateUsing(fn (?string $state) => class_basename((string) $state) ?: '—'),
@@ -76,6 +77,7 @@ class InvoiceResource extends Resource
                     ->action(function (Invoice $r, array $data) {
                         $payment = Payment::create([
                             'client_id' => $r->client_id,
+                            'location_id' => $r->location_id,
                             'payment_type' => $data['payment_type'],
                             'amount' => $data['amount'],
                             'cash_received' => $data['cash_received'] ?? null,

@@ -6,6 +6,7 @@ use App\Filament\Concerns\HasResourcePermissions;
 use App\Filament\Resources\InventoryReturnResource\Pages;
 use App\Models\InventoryReturn;
 use App\Models\Product;
+use App\Support\LocationContext;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -55,6 +56,7 @@ class InventoryReturnResource extends Resource
                     ->helperText('Client returning the item.'),
                 Forms\Components\TextInput::make('source_document')->label('Order / invoice #')
                     ->helperText('Original purchase order or sale invoice number this return relates to.'),
+                LocationContext::selectField()->helperText('Branch this return applies to.'),
                 Forms\Components\TextInput::make('reason')->columnSpanFull()
                     ->helperText('Reason for the return, e.g. wrong item, damaged, or expired.'),
             ]),
@@ -88,6 +90,7 @@ class InventoryReturnResource extends Resource
                 Tables\Columns\TextColumn::make('party')->label('Party')
                     ->state(fn (InventoryReturn $r) => $r->supplier?->name ?? $r->client?->full_name ?? '—'),
                 Tables\Columns\TextColumn::make('return_date')->date('d M Y')->sortable(),
+                Tables\Columns\TextColumn::make('location.name')->label('Branch')->toggleable(),
                 Tables\Columns\TextColumn::make('refund_amount')->money('PHP'),
                 Tables\Columns\TextColumn::make('status')->badge()->colors(['gray' => 'draft', 'success' => 'posted']),
             ])

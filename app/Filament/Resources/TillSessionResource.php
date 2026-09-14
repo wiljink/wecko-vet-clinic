@@ -6,6 +6,7 @@ use App\Filament\Concerns\HasResourcePermissions;
 use App\Filament\Resources\TillSessionResource\Pages;
 use App\Models\CompanySetting;
 use App\Models\TillSession;
+use App\Support\LocationContext;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -37,8 +38,7 @@ class TillSessionResource extends Resource
             Forms\Components\Grid::make(3)->schema([
                 Forms\Components\DatePicker::make('session_date')->default(now())->required()
                     ->helperText('The trading day this till count belongs to.'),
-                Forms\Components\Select::make('location_id')->relationship('location', 'name')->searchable()
-                    ->helperText('Branch drawer being counted, for clinics with more than one till.'),
+                LocationContext::selectField()->helperText('Branch drawer being counted.'),
                 Forms\Components\TextInput::make('opening_float')->numeric()->prefix('₱')->default(0)->required()
                     ->helperText('Cash left in the drawer to start the day — excluded from the day\'s takings when the till is reconciled.'),
             ]),

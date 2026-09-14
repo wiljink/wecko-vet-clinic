@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Concerns\HasResourcePermissions;
 use App\Filament\Resources\InventoryAdjustmentResource\Pages;
 use App\Models\InventoryAdjustment;
+use App\Support\LocationContext;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -39,6 +40,7 @@ class InventoryAdjustmentResource extends Resource
                 Forms\Components\DatePicker::make('adjustment_date')->default(now())->required()
                     ->helperText('Date the correction is being recorded.'),
                 Forms\Components\Placeholder::make('status')->content(fn (?InventoryAdjustment $record) => ucfirst($record?->status ?? 'draft')),
+                LocationContext::selectField()->helperText('Branch this correction applies to.'),
                 Forms\Components\TextInput::make('remarks')->label('Reason for adjustment')->columnSpanFull()
                     ->helperText('Overall reason for this adjustment, e.g. damaged stock, theft, or count correction.'),
             ]),
@@ -63,6 +65,7 @@ class InventoryAdjustmentResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('reference')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('adjustment_date')->date('d M Y')->sortable(),
+                Tables\Columns\TextColumn::make('location.name')->label('Branch')->toggleable(),
                 Tables\Columns\TextColumn::make('remarks')->limit(50),
                 Tables\Columns\TextColumn::make('items_count')->counts('items')->label('Lines')->badge(),
                 Tables\Columns\TextColumn::make('status')->badge()->colors(['gray' => 'draft', 'success' => 'posted']),

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToLocation;
 use App\Models\Concerns\GeneratesReference;
 use App\Models\Concerns\RecordsActivity;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 
 class CounterSale extends Model
 {
-    use GeneratesReference, RecordsActivity;
+    use BelongsToLocation, GeneratesReference, RecordsActivity;
 
     protected string $referenceColumn = 'sale_no';
 
@@ -50,11 +51,6 @@ class CounterSale extends Model
     public function provider(): BelongsTo
     {
         return $this->belongsTo(User::class, 'provider_id');
-    }
-
-    public function location(): BelongsTo
-    {
-        return $this->belongsTo(Location::class);
     }
 
     public function items(): HasMany
@@ -112,6 +108,7 @@ class CounterSale extends Model
 
                 if ($item->product?->tracksStock()) {
                     StockMovement::record($item->product, 'sale', -(float) $item->qty, [
+                        'location_id' => $this->location_id,
                         'reason' => "Counter sale {$this->sale_no}",
                         'source_type' => $this->getMorphClass(),
                         'source_id' => $this->id,
@@ -128,6 +125,7 @@ class CounterSale extends Model
 
             $invoice = Invoice::create([
                 'client_id' => $clientId,
+                'location_id' => $this->location_id,
                 'source_type' => $this->getMorphClass(),
                 'source_id' => $this->id,
                 'invoice_date' => $this->sale_date,
@@ -141,6 +139,7 @@ class CounterSale extends Model
             if ($payment) {
                 $paymentModel = Payment::create([
                     'client_id' => $clientId,
+                    'location_id' => $this->location_id,
                     'payment_type' => $payment['payment_type'],
                     'amount' => $invoice->total,
                     'cash_received' => $payment['cash_received'] ?? null,

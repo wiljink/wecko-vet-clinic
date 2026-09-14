@@ -8,6 +8,7 @@ use App\Models\Consultation;
 use App\Models\CounterSale;
 use App\Models\Group;
 use App\Models\Invoice;
+use App\Models\Location;
 use App\Models\Patient;
 use App\Models\Payment;
 use App\Models\Product;
@@ -60,22 +61,25 @@ class ClinicWorkflowTest extends TestCase
 
     public function test_stock_movement_updates_cached_quantity(): void
     {
+        $location = Location::first();
         $drug = $this->drug();
-        StockMovement::record($drug, 'opening', 100);
-        StockMovement::record($drug, 'sale', -15);
+        StockMovement::record($drug, 'opening', 100, ['location_id' => $location->id]);
+        StockMovement::record($drug, 'sale', -15, ['location_id' => $location->id]);
 
         $this->assertEquals(85, $drug->fresh()->qty_on_hand);
     }
 
     public function test_finalizing_a_consult_deducts_stock_and_raises_an_invoice(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->create()->assignRole('principal'));
+        $location = Location::first();
         $patient = $this->patient();
         $drug = $this->drug();
-        StockMovement::record($drug, 'opening', 50);
+        StockMovement::record($drug, 'opening', 50, ['location_id' => $location->id]);
 
         $consult = Consultation::create([
             'client_id' => $patient->client_id, 'patient_id' => $patient->id, 'consult_date' => now(),
+            'location_id' => $location->id,
         ]);
         $consult->items()->create([
             'kind' => 'drug', 'product_id' => $drug->id, 'description' => $drug->name,
@@ -92,7 +96,8 @@ class ClinicWorkflowTest extends TestCase
 
     public function test_vaccination_line_creates_a_booster_reminder(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->create()->assignRole('principal'));
+        $location = Location::first();
         $patient = $this->patient();
         $vaccine = Product::create([
             'kind' => 'vaccine', 'name' => 'C5', 'sell_price_ex_tax' => 500, 'tax_rate' => 12,
@@ -102,6 +107,7 @@ class ClinicWorkflowTest extends TestCase
 
         $consult = Consultation::create([
             'client_id' => $patient->client_id, 'patient_id' => $patient->id, 'consult_date' => now(),
+            'location_id' => $location->id,
         ]);
         $consult->items()->create([
             'kind' => 'vaccination', 'product_id' => $vaccine->id, 'description' => 'C5',
@@ -141,11 +147,12 @@ class ClinicWorkflowTest extends TestCase
 
     public function test_counter_sale_completion_takes_payment_with_change(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->create()->assignRole('principal'));
+        $location = Location::first();
         $product = $this->drug(['sell_price_ex_tax' => 100]);
-        StockMovement::record($product, 'opening', 20);
+        StockMovement::record($product, 'opening', 20, ['location_id' => $location->id]);
 
-        $sale = CounterSale::create(['walk_in' => true, 'walk_in_name' => 'Jo', 'sale_date' => now()]);
+        $sale = CounterSale::create(['walk_in' => true, 'walk_in_name' => 'Jo', 'sale_date' => now(), 'location_id' => $location->id]);
         $sale->items()->create(['kind' => 'product', 'product_id' => $product->id, 'description' => $product->name, 'qty' => 2, 'unit_price_ex_tax' => 100, 'tax_rate' => 12]);
         $sale->refresh();
 

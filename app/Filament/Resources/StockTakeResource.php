@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Concerns\HasResourcePermissions;
 use App\Filament\Resources\StockTakeResource\Pages;
 use App\Models\StockTake;
+use App\Support\LocationContext;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -39,6 +40,7 @@ class StockTakeResource extends Resource
                 Forms\Components\DatePicker::make('take_date')->default(now())->required()
                     ->helperText('Date the physical count was performed.'),
                 Forms\Components\Placeholder::make('status')->content(fn (?StockTake $record) => ucfirst($record?->status ?? 'open')),
+                LocationContext::selectField()->helperText('Branch being counted.'),
                 Forms\Components\TextInput::make('notes')->columnSpanFull()
                     ->helperText('Optional notes about this stock take, e.g. which area or shelves were counted.'),
             ]),
@@ -62,6 +64,7 @@ class StockTakeResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('reference')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('take_date')->date('d M Y')->sortable(),
+                Tables\Columns\TextColumn::make('location.name')->label('Branch')->toggleable(),
                 Tables\Columns\TextColumn::make('items_count')->counts('items')->label('Lines')->badge(),
                 Tables\Columns\TextColumn::make('status')->badge()->colors(['warning' => 'open', 'success' => 'posted']),
                 Tables\Columns\TextColumn::make('created_at')->date('d M Y')->toggleable(),

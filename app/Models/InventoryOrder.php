@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToLocation;
 use App\Models\Concerns\GeneratesReference;
 use App\Models\Concerns\RecordsActivity;
 use Illuminate\Database\Eloquent\Model;
@@ -10,14 +11,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class InventoryOrder extends Model
 {
-    use GeneratesReference, RecordsActivity;
+    use BelongsToLocation, GeneratesReference, RecordsActivity;
 
     protected string $referenceColumn = 'order_no';
 
     protected string $referencePrefix = 'PO';
 
     protected $fillable = [
-        'order_no', 'supplier_id', 'order_date', 'delivery_date', 'status',
+        'order_no', 'supplier_id', 'location_id', 'order_date', 'delivery_date', 'status',
         'total_ex_tax', 'notes', 'created_by',
     ];
 
@@ -71,22 +72,29 @@ class InventoryOrder extends Model
         $this->update(['status' => $status]);
     }
 
-    /** Build order lines for every product below its reorder level (manual 5.4.1). */
-    public static function autoFillFor(Supplier $supplier): self
+    /** Build order lines for every product below its reorder level at the given branch (manual 5.4.1). */
+    public static function autoFillFor(Supplier $supplier, int $locationId): self
     {
         $order = static::create([
             'supplier_id' => $supplier->id,
+            'location_id' => $locationId,
             'order_date' => now()->toDateString(),
             'status' => 'draft',
         ]);
 
         Product::query()
             ->where('supplier_id', $supplier->id)
-            ->belowReorder()
+            ->where('reorder_level', '>', 0)
             ->get()
-            ->each(function (Product $product) use ($order) {
+            ->each(function (Product $product) use ($order, $locationId) {
+                $onHand = ProductStockLevel::qtyOf($product, $locationId);
+
+                if ($onHand >= $product->reorder_level) {
+                    return;
+                }
+
                 $target = max($product->max_holding, $product->reorder_level);
-                $qty = max(0, $target - $product->qty_on_hand);
+                $qty = max(0, $target - $onHand);
 
                 if ($qty > 0) {
                     $order->items()->create([

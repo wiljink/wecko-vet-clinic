@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToLocation;
 use App\Models\Concerns\RecordsActivity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +13,7 @@ use Illuminate\Support\Carbon;
 
 class Appointment extends Model
 {
-    use RecordsActivity;
+    use BelongsToLocation, RecordsActivity;
 
     protected $fillable = [
         'client_id', 'patient_id', 'provider_id', 'location_id',
@@ -59,11 +60,6 @@ class Appointment extends Model
     public function provider(): BelongsTo
     {
         return $this->belongsTo(User::class, 'provider_id');
-    }
-
-    public function location(): BelongsTo
-    {
-        return $this->belongsTo(Location::class);
     }
 
     public function reason(): BelongsTo

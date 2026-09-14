@@ -10,6 +10,7 @@ use App\Models\Consultation;
 use App\Models\Patient;
 use App\Models\Product;
 use App\Models\StandardConsult;
+use App\Support\LocationContext;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -53,9 +54,9 @@ class ConsultationResource extends Resource
                     ->searchable()->preload()
                     ->default(fn () => Appointment::find(request()->integer('appointment'))?->provider_id ?? Auth::id())
                     ->helperText('The vet or staff member conducting this consultation; defaults to whoever is logged in.'),
-                Forms\Components\Select::make('location_id')->relationship('location', 'name')->searchable()->preload()
-                    ->default(fn () => Appointment::find(request()->integer('appointment'))?->location_id)
-                    ->helperText('Clinic branch where the consultation is taking place.'),
+                LocationContext::selectField()
+                    ->default(fn () => Appointment::find(request()->integer('appointment'))?->location_id ?? LocationContext::activeId())
+                    ->helperText('Branch where the consultation is taking place.'),
                 Forms\Components\DateTimePicker::make('consult_date')->default(now())->seconds(false)->required()
                     ->helperText('When the consultation occurred; used to order the patient\'s medical history.'),
                 Forms\Components\Select::make('appointment_reason_id')->label('Reason')
@@ -189,6 +190,7 @@ class ConsultationResource extends Resource
                 Tables\Columns\TextColumn::make('patient.name')->label('Patient')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('client.full_name')->label('Client')->searchable(['surname']),
                 Tables\Columns\TextColumn::make('provider.name')->label('Provider')->toggleable(),
+                Tables\Columns\TextColumn::make('location.name')->label('Branch')->toggleable(),
                 Tables\Columns\TextColumn::make('reason.reason')->label('Reason')->toggleable(),
                 Tables\Columns\TextColumn::make('consult_diagnosis')->label('Diagnosis')->limit(30)->toggleable(),
                 Tables\Columns\TextColumn::make('total_inc_tax')->label('Total')->money('PHP')->alignEnd(),

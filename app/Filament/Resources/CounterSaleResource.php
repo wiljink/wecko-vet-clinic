@@ -7,6 +7,7 @@ use App\Filament\Resources\CounterSaleResource\Pages;
 use App\Models\Client;
 use App\Models\CounterSale;
 use App\Models\Product;
+use App\Support\LocationContext;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -48,8 +49,7 @@ class CounterSaleResource extends Resource
                     ->helperText('The account this sale can be closed on account against.'),
                 Forms\Components\Select::make('provider_id')->relationship('provider', 'name')->searchable()->default(auth()->id())
                     ->helperText('Staff member credited with this sale on commission and sales reports.'),
-                Forms\Components\Select::make('location_id')->relationship('location', 'name')->searchable()
-                    ->helperText('Branch or room the sale is recorded against for stock and reporting purposes.'),
+                LocationContext::selectField()->helperText('Branch the sale is recorded against for stock and reporting purposes.'),
                 Forms\Components\DatePicker::make('sale_date')->default(now())->required()
                     ->helperText('Date the sale is recorded under; affects which reporting period it falls into.'),
             ]),
@@ -99,6 +99,7 @@ class CounterSaleResource extends Resource
                 Tables\Columns\TextColumn::make('sale_date')->date('d M Y')->sortable(),
                 Tables\Columns\TextColumn::make('customer')->label('Customer')
                     ->state(fn (CounterSale $r) => $r->client?->full_name ?? ($r->walk_in_name ?: 'Walk-in')),
+                Tables\Columns\TextColumn::make('location.name')->label('Branch')->toggleable(),
                 Tables\Columns\TextColumn::make('items_count')->counts('items')->label('Items')->badge(),
                 Tables\Columns\TextColumn::make('total_inc_tax')->money('PHP')->label('Total'),
                 Tables\Columns\TextColumn::make('status')->badge()->colors([

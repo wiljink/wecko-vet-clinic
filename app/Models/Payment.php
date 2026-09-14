@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToLocation;
 use App\Models\Concerns\GeneratesReference;
 use App\Models\Concerns\RecordsActivity;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Payment extends Model
 {
-    use GeneratesReference, RecordsActivity;
+    use BelongsToLocation, GeneratesReference, RecordsActivity;
 
     protected string $referenceColumn = 'payment_no';
 
@@ -25,7 +26,7 @@ class Payment extends Model
     ];
 
     protected $fillable = [
-        'payment_no', 'client_id', 'payment_type', 'amount', 'cash_received', 'change_given',
+        'payment_no', 'client_id', 'location_id', 'payment_type', 'amount', 'cash_received', 'change_given',
         'card_type_id', 'reference', 'is_refund', 'banked', 'banked_on', 'banking_batch_id',
         'received_at', 'received_by',
     ];

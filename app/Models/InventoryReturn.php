@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToLocation;
 use App\Models\Concerns\GeneratesReference;
 use App\Models\Concerns\RecordsActivity;
 use Illuminate\Database\Eloquent\Model;
@@ -11,12 +12,12 @@ use Illuminate\Support\Facades\DB;
 
 class InventoryReturn extends Model
 {
-    use GeneratesReference, RecordsActivity;
+    use BelongsToLocation, GeneratesReference, RecordsActivity;
 
     protected string $referencePrefix = 'RET';
 
     protected $fillable = [
-        'reference', 'direction', 'supplier_id', 'client_id', 'source_document',
+        'reference', 'direction', 'supplier_id', 'client_id', 'location_id', 'source_document',
         'return_date', 'reason', 'status', 'refund_amount', 'posted_at', 'created_by',
     ];
 
@@ -73,6 +74,7 @@ class InventoryReturn extends Model
                 $qtyChange = $this->direction === 'supplier' ? -(float) $item->qty : (float) $item->qty;
 
                 StockMovement::record($item->product, $type, $qtyChange, [
+                    'location_id' => $this->location_id,
                     'reason' => "Return {$this->reference}".($this->source_document ? " ({$this->source_document})" : ''),
                     'source_type' => $this->getMorphClass(),
                     'source_id' => $this->id,
@@ -83,6 +85,7 @@ class InventoryReturn extends Model
             if ($this->direction === 'customer' && $this->client && $this->refund_amount > 0) {
                 Payment::create([
                     'client_id' => $this->client_id,
+                    'location_id' => $this->location_id,
                     'payment_type' => 'cash',
                     'amount' => $this->refund_amount,
                     'is_refund' => true,

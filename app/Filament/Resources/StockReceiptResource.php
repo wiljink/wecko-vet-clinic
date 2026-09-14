@@ -6,6 +6,7 @@ use App\Filament\Concerns\HasResourcePermissions;
 use App\Filament\Resources\StockReceiptResource\Pages;
 use App\Models\Product;
 use App\Models\StockReceipt;
+use App\Support\LocationContext;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -49,6 +50,7 @@ class StockReceiptResource extends Resource
                     ->helperText('Date the stock physically arrived.'),
                 Forms\Components\TextInput::make('supplier_doc_no')->label('Supplier invoice #')
                     ->helperText('Supplier\'s invoice or delivery note number, for matching against their paperwork.'),
+                LocationContext::selectField()->helperText('Branch this stock is being received into.'),
                 Forms\Components\Placeholder::make('status')->content(fn (?StockReceipt $record) => ucfirst($record?->status ?? 'draft')),
             ]),
             Forms\Components\Repeater::make('items')->relationship()->columnSpanFull()
@@ -85,6 +87,7 @@ class StockReceiptResource extends Resource
                 Tables\Columns\TextColumn::make('receipt_no')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('supplier.name')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('order.order_no')->label('Order')->toggleable(),
+                Tables\Columns\TextColumn::make('location.name')->label('Branch')->toggleable(),
                 Tables\Columns\TextColumn::make('received_date')->date('d M Y')->sortable(),
                 Tables\Columns\TextColumn::make('total_ex_tax')->money('PHP')->label('Total (ex tax)'),
                 Tables\Columns\TextColumn::make('status')->badge()->colors(['gray' => 'draft', 'success' => 'posted']),

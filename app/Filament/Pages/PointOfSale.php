@@ -5,10 +5,10 @@ namespace App\Filament\Pages;
 use App\Models\Client;
 use App\Models\CompanySetting;
 use App\Models\CounterSale;
-use App\Models\Location;
 use App\Models\Product;
 use App\Models\User;
 use App\Support\LineTotals;
+use App\Support\LocationContext;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
@@ -72,7 +72,13 @@ class PointOfSale extends Page
     public function mount(): void
     {
         $this->providerId = Auth::id();
+        $this->locationId = LocationContext::activeId();
         $this->paymentType = CompanySetting::current()->pos_default_payment_type ?: 'cash';
+    }
+
+    public function canSwitchLocation(): bool
+    {
+        return LocationContext::canSwitch();
     }
 
     // ---- lookups for the view -------------------------------------------------
@@ -86,7 +92,7 @@ class PointOfSale extends Page
     /** @return array<int, string> */
     public function getLocationOptionsProperty(): array
     {
-        return Location::orderBy('name')->pluck('name', 'id')->all();
+        return LocationContext::accessibleOptions();
     }
 
     /** @return array<int, string> */
@@ -279,6 +285,12 @@ class PointOfSale extends Page
 
         if (! $this->walkIn && ! $this->clientId) {
             Notification::make()->title('Select a client or switch to walk-in')->warning()->send();
+
+            return;
+        }
+
+        if (! in_array($this->locationId, Auth::user()->accessibleLocationIds(), true)) {
+            Notification::make()->title('Select a branch')->warning()->send();
 
             return;
         }

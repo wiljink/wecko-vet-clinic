@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Group;
+use App\Models\Location;
 use App\Models\Product;
 use App\Models\StockMovement;
 use App\Models\User;
@@ -56,7 +57,7 @@ class PosBarcodeImportTest extends TestCase
         $this->actingAs($user);
 
         $product = $this->drug(['sell_price_ex_tax' => 100, 'barcode' => '29000000123']);
-        StockMovement::record($product, 'opening', 20);
+        StockMovement::record($product, 'opening', 20, ['location_id' => Location::main()->id]);
 
         \Livewire\Livewire::test(\App\Filament\Pages\PointOfSale::class)
             ->set('scan', '29000000123')
@@ -110,7 +111,7 @@ class PosBarcodeImportTest extends TestCase
     {
         $this->actingAs(User::factory()->create());
         $product = $this->drug(['code' => 'STK1']);
-        StockMovement::record($product, 'opening', 10);
+        StockMovement::record($product, 'opening', 10, ['location_id' => Location::main()->id]);
 
         $result = (new StockLevelImporter)->run(
             [['code' => 'STK1', 'barcode' => '', 'name' => '', 'qty_on_hand' => '25', 'unit_cost_ex_tax' => '4', 'batch_no' => '', 'expiry_on' => '']],

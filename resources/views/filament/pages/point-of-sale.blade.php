@@ -134,8 +134,8 @@
                             <option value="{{ $id }}">{{ $name }}</option>
                         @endforeach
                     </select>
-                    <select class="pos-in" wire:model="locationId">
-                        <option value="">Location…</option>
+                    <select class="pos-in" wire:model="locationId" @disabled(! $this->canSwitchLocation())>
+                        <option value="">Branch…</option>
                         @foreach ($this->locationOptions as $id => $name)
                             <option value="{{ $id }}">{{ $name }}</option>
                         @endforeach

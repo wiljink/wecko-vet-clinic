@@ -32,8 +32,8 @@ class RolesAndPermissionsSeeder extends Seeder
         // Inventory
         'product', 'supplier', 'stock_movement', 'inventory_order', 'stock_receipt',
         'stock_take', 'inventory_adjustment', 'inventory_return', 'stock_transfer',
-        // Setup
-        'reference_data', 'company_setting', 'document_template', 'marketing_campaign',
+        // Setup — principal-only, except 'room' which branch staff self-serve
+        'reference_data', 'company_setting', 'document_template', 'marketing_campaign', 'room',
         // System
         'user', 'role', 'activity', 'backup',
         // Reports
@@ -75,6 +75,8 @@ class RolesAndPermissionsSeeder extends Seeder
         $principal->syncPermissions(Permission::all());
 
         // Veterinarian: full clinical + inventory + sales, no security/backup admin.
+        // Setup (reference_data, document_template, company_setting, marketing_campaign)
+        // is principal-only — branches self-serve only their own Rooms list.
         $vet->syncPermissions(Permission::where(function ($q) {
             foreach ([
                 'client', 'patient', 'patient_transfer', 'appointment', 'reminder', 'task',
@@ -82,7 +84,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'counter_sale', 'invoice', 'payment', 'account_adjustment',
                 'product', 'supplier', 'stock_movement', 'inventory_order', 'stock_receipt',
                 'stock_take', 'inventory_adjustment', 'inventory_return', 'stock_transfer', 'report',
-                'reference_data', 'document_template',
+                'room',
             ] as $key) {
                 $q->orWhere('name', 'like', "%_{$key}");
             }
@@ -107,6 +109,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'create_appointment', 'update_appointment', 'create_task', 'update_task',
             'create_vaccination', 'update_vaccination', 'create_prescription', 'update_prescription',
             'run_reminders',
+            'view_any_room', 'view_room', 'create_room', 'update_room', 'delete_room',
         ])->get());
 
         // Receptionist: front desk — clients, appointments, counter sales, payments.
@@ -122,6 +125,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view_any_consultation', 'view_consultation',
             'view_any_report', 'view_report',
             'run_reminders', 'run_statements',
+            'view_any_room', 'view_room', 'create_room', 'update_room', 'delete_room',
         ])->get());
     }
 }

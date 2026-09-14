@@ -243,4 +243,20 @@ class MultiBranchTest extends TestCase
         $reportAll = app(ReportBuilder::class)->salesVat(Carbon::now()->startOfYear(), Carbon::now()->endOfYear());
         $this->assertEqualsWithDelta(1500.0, $reportAll['tiles'][1]['value'], 0.01); // both branches
     }
+
+    public function test_setup_is_principal_only_except_rooms_which_branch_staff_self_serve(): void
+    {
+        $vet = User::factory()->create()->assignRole('veterinarian');
+        $receptionist = User::factory()->create()->assignRole('receptionist');
+
+        foreach (['reference_data', 'company_setting', 'document_template', 'marketing_campaign'] as $key) {
+            $this->assertFalse($vet->can("view_any_{$key}"), "vet should not see Setup > {$key}");
+            $this->assertFalse($receptionist->can("view_any_{$key}"), "receptionist should not see Setup > {$key}");
+        }
+
+        $this->assertTrue($vet->can('view_any_room'));
+        $this->assertTrue($vet->can('create_room'));
+        $this->assertTrue($receptionist->can('view_any_room'));
+        $this->assertTrue($receptionist->can('create_room'));
+    }
 }

@@ -21,6 +21,15 @@ class RoomResource extends Resource
 
     protected static ?string $model = Location::class;
 
+    /**
+     * Its own permission key, distinct from 'reference_data' — Setup is
+     * principal-only, but branch staff self-serve their own Rooms list.
+     */
+    protected static function permissionKey(): string
+    {
+        return 'room';
+    }
+
     protected static ?string $navigationIcon = 'heroicon-o-home-modern';
 
     protected static ?string $navigationLabel = 'Rooms';

@@ -113,21 +113,16 @@ class RolesAndPermissionsSeeder extends Seeder
             'view_any_document_template', 'view_document_template', 'create_document_template', 'update_document_template', 'delete_document_template',
         ])->get());
 
-        // Receptionist: front desk — clients, appointments, counter sales,
-        // payments. No Inventory, no Setup (not even Rooms/Document Templates —
-        // that's for clinical staff, not front desk).
+        // Receptionist: front desk — clients, appointments, calendar. No
+        // Inventory, no Setup, no Sales, no Reports — booking/records only.
         $receptionist->syncPermissions(Permission::whereIn('name', [
             'view_any_client', 'view_client', 'create_client', 'update_client',
             'view_any_patient', 'view_patient', 'create_patient', 'update_patient',
             'view_any_appointment', 'view_appointment', 'create_appointment', 'update_appointment', 'delete_appointment',
             'view_any_reminder', 'view_reminder', 'update_reminder',
             'view_any_task', 'view_task', 'create_task', 'update_task',
-            'view_any_counter_sale', 'view_counter_sale', 'create_counter_sale', 'update_counter_sale',
-            'view_any_invoice', 'view_invoice',
-            'view_any_payment', 'view_payment', 'create_payment', 'process_payment',
             'view_any_consultation', 'view_consultation',
-            'view_any_report', 'view_report',
-            'run_reminders', 'run_statements',
+            'run_reminders',
         ])->get());
     }
 }

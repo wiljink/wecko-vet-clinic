@@ -275,4 +275,21 @@ class MultiBranchTest extends TestCase
             $this->assertFalse($receptionist->can("view_any_{$key}"), "receptionist should not see Inventory > {$key}");
         }
     }
+
+    public function test_receptionist_has_no_sales_or_reports_access(): void
+    {
+        $receptionist = User::factory()->create()->assignRole('receptionist');
+
+        foreach (['counter_sale', 'invoice', 'payment', 'account_adjustment', 'statement_run', 'banking_batch', 'till_session'] as $key) {
+            $this->assertFalse($receptionist->can("view_any_{$key}"), "receptionist should not see Sales > {$key}");
+        }
+        $this->assertFalse($receptionist->can('process_payment'));
+        $this->assertFalse($receptionist->can('run_statements'));
+        $this->assertFalse($receptionist->can('view_any_report'), 'receptionist should not see Reports');
+
+        // Front desk essentials stay intact.
+        $this->assertTrue($receptionist->can('view_any_client'));
+        $this->assertTrue($receptionist->can('create_appointment'));
+        $this->assertTrue($receptionist->can('view_any_consultation'));
+    }
 }

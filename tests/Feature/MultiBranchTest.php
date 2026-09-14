@@ -244,19 +244,28 @@ class MultiBranchTest extends TestCase
         $this->assertEqualsWithDelta(1500.0, $reportAll['tiles'][1]['value'], 0.01); // both branches
     }
 
-    public function test_setup_is_principal_only_except_rooms_which_branch_staff_self_serve(): void
+    public function test_setup_is_principal_only_except_rooms_and_document_templates(): void
     {
         $vet = User::factory()->create()->assignRole('veterinarian');
+        $nurse = User::factory()->create()->assignRole('nurse');
         $receptionist = User::factory()->create()->assignRole('receptionist');
 
-        foreach (['reference_data', 'company_setting', 'document_template', 'marketing_campaign'] as $key) {
+        foreach (['reference_data', 'company_setting', 'marketing_campaign'] as $key) {
             $this->assertFalse($vet->can("view_any_{$key}"), "vet should not see Setup > {$key}");
+            $this->assertFalse($nurse->can("view_any_{$key}"), "nurse should not see Setup > {$key}");
             $this->assertFalse($receptionist->can("view_any_{$key}"), "receptionist should not see Setup > {$key}");
         }
 
-        $this->assertTrue($vet->can('view_any_room'));
-        $this->assertTrue($vet->can('create_room'));
-        $this->assertTrue($receptionist->can('view_any_room'));
-        $this->assertTrue($receptionist->can('create_room'));
+        foreach ([$vet, $nurse, $receptionist] as $branchStaff) {
+            $this->assertTrue($branchStaff->can('view_any_room'));
+            $this->assertTrue($branchStaff->can('create_room'));
+            $this->assertTrue($branchStaff->can('update_room'));
+            $this->assertTrue($branchStaff->can('delete_room'));
+
+            $this->assertTrue($branchStaff->can('view_any_document_template'));
+            $this->assertTrue($branchStaff->can('create_document_template'));
+            $this->assertTrue($branchStaff->can('update_document_template'));
+            $this->assertTrue($branchStaff->can('delete_document_template'));
+        }
     }
 }

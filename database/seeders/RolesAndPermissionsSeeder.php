@@ -74,9 +74,9 @@ class RolesAndPermissionsSeeder extends Seeder
 
         $principal->syncPermissions(Permission::all());
 
-        // Veterinarian: full clinical + inventory + sales, no security/backup admin.
-        // Setup (reference_data, document_template, company_setting, marketing_campaign)
-        // is principal-only — branches self-serve only their own Rooms list.
+        // Veterinarian, nurse, receptionist: Setup (reference_data,
+        // company_setting, marketing_campaign) is principal-only — branch
+        // staff self-serve only their own Rooms and Document Templates.
         $vet->syncPermissions(Permission::where(function ($q) {
             foreach ([
                 'client', 'patient', 'patient_transfer', 'appointment', 'reminder', 'task',
@@ -84,7 +84,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'counter_sale', 'invoice', 'payment', 'account_adjustment',
                 'product', 'supplier', 'stock_movement', 'inventory_order', 'stock_receipt',
                 'stock_take', 'inventory_adjustment', 'inventory_return', 'stock_transfer', 'report',
-                'room',
+                'room', 'document_template',
             ] as $key) {
                 $q->orWhere('name', 'like', "%_{$key}");
             }
@@ -110,6 +110,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'create_vaccination', 'update_vaccination', 'create_prescription', 'update_prescription',
             'run_reminders',
             'view_any_room', 'view_room', 'create_room', 'update_room', 'delete_room',
+            'view_any_document_template', 'view_document_template', 'create_document_template', 'update_document_template', 'delete_document_template',
         ])->get());
 
         // Receptionist: front desk — clients, appointments, counter sales, payments.
@@ -126,6 +127,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view_any_report', 'view_report',
             'run_reminders', 'run_statements',
             'view_any_room', 'view_room', 'create_room', 'update_room', 'delete_room',
+            'view_any_document_template', 'view_document_template', 'create_document_template', 'update_document_template', 'delete_document_template',
         ])->get());
     }
 }

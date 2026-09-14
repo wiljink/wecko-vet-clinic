@@ -4,8 +4,6 @@ namespace App\Providers;
 
 use App\Support\FilipinoFaker;
 use Faker\Generator as FakerGenerator;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Infolist;
 use Filament\Support\Facades\FilamentView;
 use Filament\Tables\Table;
@@ -41,9 +39,5 @@ class AppServiceProvider extends ServiceProvider
         Table::$defaultNumberLocale = 'en_PH';
         Infolist::$defaultCurrency = 'PHP';
         Infolist::$defaultNumberLocale = 'en_PH';
-
-        // No visible labels on any text field, anywhere in the panel.
-        TextInput::configureUsing(fn (TextInput $component) => $component->hiddenLabel());
-        Textarea::configureUsing(fn (Textarea $component) => $component->hiddenLabel());
     }
 }
